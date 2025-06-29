@@ -119,7 +119,6 @@ export function useElevatorSimulation(
   const nextPersonId = useRef(1);
   
   const getInitialState = useCallback(() => {
-    nextPersonId.current = 1; // Reset person ID counter
     return {
       state: {
         currentTime: 0,
@@ -233,7 +232,7 @@ export function useElevatorSimulation(
         }
       };
     });
-  }, [numFloors, elevatorCapacity, customManageElevators]);
+  }, [numFloors, elevatorCapacity, customManageElevators, defaultManageElevators]);
 
   useEffect(() => {
     if (simulationIntervalRef.current) {
