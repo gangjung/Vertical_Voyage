@@ -147,7 +147,7 @@ export default function VerticalVoyagePage() {
             <div className="flex flex-col items-center p-2 rounded-lg">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Footprints className="w-4 h-4" />
-                <span>Avg. Journey Steps</span>
+                <span>Avg. Journey (Wait+Travel)</span>
               </div>
               <span className="font-bold text-2xl mt-1">{stats.averageJourneyTime.toFixed(1)}</span>
               <span className="text-xs text-muted-foreground">(2nd Priority)</span>
@@ -179,14 +179,14 @@ export default function VerticalVoyagePage() {
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-muted-foreground">
                 <Footprints className="w-4 h-4" />
-                <span>Average Wait Steps</span>
+                <span>Avg. Wait (Spawn → Pickup)</span>
                </div>
               <span className="font-bold text-base">{stats.averageWaitTime.toFixed(1)}</span>
             </div>
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-muted-foreground">
                 <Route className="w-4 h-4" />
-                <span>Average Travel Steps</span>
+                <span>Avg. Travel (In Elevator)</span>
                </div>
               <span className="font-bold text-base">{stats.averageTravelTime.toFixed(1)}</span>
             </div>
