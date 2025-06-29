@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { Users, Footprints, Code, Play, Trophy, Clock, Route, Milestone, Timer, UsersRound } from 'lucide-react';
+import { Users, Footprints, Code, Play, Trophy, Clock, Route, Milestone, Timer, UsersRound, Settings, Building } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exampleAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
@@ -202,6 +202,35 @@ export default function VerticalVoyagePage() {
             </div>
          </CardContent>
        </Card>
+
+      <Card className="mt-4 w-full max-w-2xl lg:max-w-4xl shadow-lg">
+        <CardHeader className="pb-2 pt-3">
+          <CardTitle className="text-lg font-headline flex items-center gap-2"><Settings className="w-5 h-5" /> Simulation Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-3 gap-y-2 gap-x-4 text-sm border-t">
+          <div className="flex items-center justify-between p-2 rounded-lg">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Building className="w-4 h-4" />
+              <span>Building Floors</span>
+            </div>
+            <span className="font-bold text-base">{NUM_FLOORS}</span>
+          </div>
+          <div className="flex items-center justify-between p-2 rounded-lg">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Users className="w-4 h-4" />
+              <span>Elevator Capacity</span>
+            </div>
+            <span className="font-bold text-base">{ELEVATOR_CAPACITY}</span>
+          </div>
+          <div className="flex items-center justify-between p-2 rounded-lg">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <UsersRound className="w-4 h-4" />
+              <span>Total Passengers</span>
+            </div>
+            <span className="font-bold text-base">{passengerManifest.length}</span>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="mt-4 w-full max-w-2xl lg:max-w-4xl shadow-lg">
          <CardHeader className="pb-2 pt-3 flex flex-row items-center justify-between">
