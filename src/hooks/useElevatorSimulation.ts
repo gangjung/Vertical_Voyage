@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { manageElevators, type AlgorithmInput, type ElevatorCommand } from '@/ai/elevator-algorithm';
 
 // --- TYPE DEFINITIONS ---
 export interface Person {
@@ -37,27 +38,34 @@ const processElevatorTick = (
   elevator: ElevatorState,
   waitingPassengers: Person[][],
   numFloors: number,
-  elevatorCapacity: number
+  elevatorCapacity: number,
+  command: ElevatorCommand
 ): { updatedElevator: ElevatorState; updatedWaiting: Person[][] } => {
   let newElevator = { ...elevator, passengers: [...elevator.passengers] };
   let newWaiting = waitingPassengers.map(f => [...f]);
 
-  // 1. Drop off passengers
+  // 1. Drop off passengers at the current floor
   newElevator.passengers = newElevator.passengers.filter(
     p => p.destinationFloor !== newElevator.floor
   );
 
-  // 2. Pick up passengers
+  // 2. Pick up passengers from the current floor
   const currentFloorWaiting = [...newWaiting[newElevator.floor]];
   const passengersNotPickedUp: Person[] = [];
   
   for (const person of currentFloorWaiting) {
     if (newElevator.passengers.length < elevatorCapacity) {
       const wantsToGoUp = person.destinationFloor > newElevator.floor;
+      const wantsToGoDown = person.destinationFloor < newElevator.floor;
+
+      // Pick up conditions:
+      // - The elevator is empty, it can take anyone.
+      // - The elevator is commanded to go UP, and the person wants to go UP.
+      // - The elevator is commanded to go DOWN, and the person wants to go DOWN.
       if (
-        newElevator.direction === 'idle' ||
-        (newElevator.direction === 'up' && wantsToGoUp) ||
-        (newElevator.direction === 'down' && !wantsToGoUp)
+        newElevator.passengers.length === 0 ||
+        (command === 'up' && wantsToGoUp) ||
+        (command === 'down' && wantsToGoDown)
       ) {
         newElevator.passengers.push(person);
       } else {
@@ -68,40 +76,17 @@ const processElevatorTick = (
     }
   }
   newWaiting[newElevator.floor] = passengersNotPickedUp;
+  
+  // 3. Update direction based on the command from the algorithm
+  newElevator.direction = command;
 
-  // 3. Determine next direction and move
-  const hasPassengers = newElevator.passengers.length > 0;
-  const isAnyoneWaiting = newWaiting.some(floor => floor.length > 0);
-
-  if (!hasPassengers && !isAnyoneWaiting) {
-    newElevator.direction = 'idle';
-  } else {
-    // Determine target floors for passengers and waiting people
-    const passengerDestinations = newElevator.passengers.map(p => p.destinationFloor);
-    const waitingFloors = newWaiting.reduce((acc, floor, idx) => {
-      if (floor.length > 0) acc.push(idx);
-      return acc;
-    }, [] as number[]);
-
-    // If at boundaries, must reverse
-    if (newElevator.floor === numFloors - 1 && newElevator.direction === 'up') newElevator.direction = 'down';
-    if (newElevator.floor === 0 && newElevator.direction === 'down') newElevator.direction = 'up';
-    
-    // If idle, find a target
-    if (newElevator.direction === 'idle') {
-      const target = hasPassengers ? passengerDestinations[0] : waitingFloors[0];
-      if (target !== undefined) {
-          newElevator.direction = target > newElevator.floor ? 'up' : 'down';
-      }
-    }
-
-    // Move
-    if (newElevator.direction === 'up') {
-      newElevator.floor = Math.min(numFloors - 1, newElevator.floor + 1);
-    } else if (newElevator.direction === 'down') {
-      newElevator.floor = Math.max(0, newElevator.floor - 1);
-    }
+  // 4. Move the elevator based on the new direction
+  if (newElevator.direction === 'up' && newElevator.floor < numFloors - 1) {
+    newElevator.floor++;
+  } else if (newElevator.direction === 'down' && newElevator.floor > 0) {
+    newElevator.floor--;
   }
+  // If direction is 'idle', it doesn't move.
 
   return { updatedElevator: newElevator, updatedWaiting: newWaiting };
 };
@@ -111,8 +96,8 @@ const processElevatorTick = (
 export function useElevatorSimulation(numFloors: number, elevatorCapacity: number): SimulationState {
   const [state, setState] = useState<SimulationState>({
     currentTime: 0,
-    elevator1: { id: 1, floor: 0, direction: 'up', passengers: [] },
-    elevator2: { id: 2, floor: 0, direction: 'up', passengers: [] },
+    elevator1: { id: 1, floor: 0, direction: 'idle', passengers: [] },
+    elevator2: { id: 2, floor: 0, direction: 'idle', passengers: [] },
     waitingPassengers: Array.from({ length: numFloors }, () => []),
   });
 
@@ -137,13 +122,27 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
         }
       }
 
-      // 2. Process Elevator 1
-      const { updatedElevator: elevator1, updatedWaiting: waitingAfterE1 } =
-        processElevatorTick(prevState.elevator1, newWaitingPassengers, numFloors, elevatorCapacity);
+      // 2. Call the user-defined algorithm to get commands
+      const algorithmInput: AlgorithmInput = {
+        currentTime: prevState.currentTime,
+        elevators: [prevState.elevator1, prevState.elevator2],
+        waitingPassengers: newWaitingPassengers,
+        numFloors: numFloors,
+        elevatorCapacity: elevatorCapacity,
+      };
+      const commands = manageElevators(algorithmInput);
+      const [command1, command2] = commands;
 
-      // 3. Process Elevator 2
+
+      // 3. Process Elevators based on commands
+      // Note: We process them sequentially. The waiting list is updated after each elevator.
+      // This means the second elevator has slightly more up-to-date info on waiting passengers.
+      const { updatedElevator: elevator1, updatedWaiting: waitingAfterE1 } =
+        processElevatorTick(prevState.elevator1, newWaitingPassengers, numFloors, elevatorCapacity, command1);
+
       const { updatedElevator: elevator2, updatedWaiting: waitingAfterE2 } =
-        processElevatorTick(prevState.elevator2, waitingAfterE1, numFloors, elevatorCapacity);
+        processElevatorTick(prevState.elevator2, waitingAfterE1, numFloors, elevatorCapacity, command2);
+
 
       // 4. Return new state
       return {
