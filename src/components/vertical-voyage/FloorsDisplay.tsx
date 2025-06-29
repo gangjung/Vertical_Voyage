@@ -5,18 +5,18 @@ import { FloorLine } from './FloorLine';
 interface FloorsDisplayProps {
   numFloors: number;
   waitingPassengers: Person[][];
-  elevatorCurrentFloor: number;
+  elevatorFloors: number[];
 }
 
-export function FloorsDisplay({ numFloors, waitingPassengers, elevatorCurrentFloor }: FloorsDisplayProps) {
+export function FloorsDisplay({ numFloors, waitingPassengers, elevatorFloors }: FloorsDisplayProps) {
   return (
-    <div className="w-2/3 flex flex-col-reverse bg-background/30 overflow-y-auto">
+    <div className="w-1/3 flex flex-col-reverse bg-background/30 overflow-y-auto border-x-2 border-primary/50">
       {Array.from({ length: numFloors }).map((_, i) => (
         <FloorLine
           key={i}
           floorNumber={i}
           passengers={waitingPassengers[i] || []}
-          isElevatorPresent={elevatorCurrentFloor === i}
+          isElevatorPresent={elevatorFloors.includes(i)}
         />
       ))}
     </div>

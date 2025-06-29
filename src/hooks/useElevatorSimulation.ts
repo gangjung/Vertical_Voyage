@@ -3,32 +3,116 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+// --- TYPE DEFINITIONS ---
 export interface Person {
   id: number;
   originFloor: number;
   destinationFloor: number;
 }
 
-export interface ElevatorSimulationState {
+export interface ElevatorState {
+  id: number;
+  floor: number;
+  direction: 'up' | 'down' | 'idle';
+  passengers: Person[];
+}
+
+export interface SimulationState {
   currentTime: number;
-  elevatorFloor: number;
-  elevatorDirection: 'up' | 'down' | 'idle';
-  passengersInElevator: Person[];
+  elevator1: ElevatorState;
+  elevator2: ElevatorState;
   waitingPassengers: Person[][];
 }
 
-const TICK_INTERVAL_MS = 1000;
-const PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR = 0.1;
-const MAX_PASSENGERS_PER_FLOOR_WAITING = 5;
 
+// --- CONSTANTS ---
+const TICK_INTERVAL_MS = 1000;
+const PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR = 0.08;
+const MAX_PASSENGERS_PER_FLOOR_WAITING = 5;
 let nextPersonId = 1;
 
-export function useElevatorSimulation(numFloors: number, elevatorCapacity: number) {
-  const [state, setState] = useState<ElevatorSimulationState>({
+
+// --- HELPER FUNCTION: CORE ELEVATOR LOGIC ---
+const processElevatorTick = (
+  elevator: ElevatorState,
+  waitingPassengers: Person[][],
+  numFloors: number,
+  elevatorCapacity: number
+): { updatedElevator: ElevatorState; updatedWaiting: Person[][] } => {
+  let newElevator = { ...elevator, passengers: [...elevator.passengers] };
+  let newWaiting = waitingPassengers.map(f => [...f]);
+
+  // 1. Drop off passengers
+  newElevator.passengers = newElevator.passengers.filter(
+    p => p.destinationFloor !== newElevator.floor
+  );
+
+  // 2. Pick up passengers
+  const currentFloorWaiting = [...newWaiting[newElevator.floor]];
+  const passengersNotPickedUp: Person[] = [];
+  
+  for (const person of currentFloorWaiting) {
+    if (newElevator.passengers.length < elevatorCapacity) {
+      const wantsToGoUp = person.destinationFloor > newElevator.floor;
+      if (
+        newElevator.direction === 'idle' ||
+        (newElevator.direction === 'up' && wantsToGoUp) ||
+        (newElevator.direction === 'down' && !wantsToGoUp)
+      ) {
+        newElevator.passengers.push(person);
+      } else {
+        passengersNotPickedUp.push(person);
+      }
+    } else {
+      passengersNotPickedUp.push(person);
+    }
+  }
+  newWaiting[newElevator.floor] = passengersNotPickedUp;
+
+  // 3. Determine next direction and move
+  const hasPassengers = newElevator.passengers.length > 0;
+  const isAnyoneWaiting = newWaiting.some(floor => floor.length > 0);
+
+  if (!hasPassengers && !isAnyoneWaiting) {
+    newElevator.direction = 'idle';
+  } else {
+    // Determine target floors for passengers and waiting people
+    const passengerDestinations = newElevator.passengers.map(p => p.destinationFloor);
+    const waitingFloors = newWaiting.reduce((acc, floor, idx) => {
+      if (floor.length > 0) acc.push(idx);
+      return acc;
+    }, [] as number[]);
+
+    // If at boundaries, must reverse
+    if (newElevator.floor === numFloors - 1 && newElevator.direction === 'up') newElevator.direction = 'down';
+    if (newElevator.floor === 0 && newElevator.direction === 'down') newElevator.direction = 'up';
+    
+    // If idle, find a target
+    if (newElevator.direction === 'idle') {
+      const target = hasPassengers ? passengerDestinations[0] : waitingFloors[0];
+      if (target !== undefined) {
+          newElevator.direction = target > newElevator.floor ? 'up' : 'down';
+      }
+    }
+
+    // Move
+    if (newElevator.direction === 'up') {
+      newElevator.floor = Math.min(numFloors - 1, newElevator.floor + 1);
+    } else if (newElevator.direction === 'down') {
+      newElevator.floor = Math.max(0, newElevator.floor - 1);
+    }
+  }
+
+  return { updatedElevator: newElevator, updatedWaiting: newWaiting };
+};
+
+
+// --- MAIN HOOK ---
+export function useElevatorSimulation(numFloors: number, elevatorCapacity: number): SimulationState {
+  const [state, setState] = useState<SimulationState>({
     currentTime: 0,
-    elevatorFloor: 0,
-    elevatorDirection: 'up',
-    passengersInElevator: [],
+    elevator1: { id: 1, floor: 0, direction: 'up', passengers: [] },
+    elevator2: { id: 2, floor: numFloors -1, direction: 'down', passengers: [] },
     waitingPassengers: Array.from({ length: numFloors }, () => []),
   });
 
@@ -36,20 +120,15 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
 
   const tick = useCallback(() => {
     setState(prevState => {
-      let newCurrentTime = prevState.currentTime + 1;
-      let newElevatorFloor = prevState.elevatorFloor;
-      let newElevatorDirection = prevState.elevatorDirection;
-      let newPassengersInElevator = [...prevState.passengersInElevator];
-      let newWaitingPassengers = prevState.waitingPassengers.map(fp => [...fp]);
-
       // 1. Passenger Generation
+      let newWaitingPassengers = prevState.waitingPassengers.map(fp => [...fp]);
       for (let floorIdx = 0; floorIdx < numFloors; floorIdx++) {
         if (newWaitingPassengers[floorIdx].length < MAX_PASSENGERS_PER_FLOOR_WAITING && Math.random() < PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR) {
           let destinationFloor;
           do {
             destinationFloor = Math.floor(Math.random() * numFloors);
           } while (destinationFloor === floorIdx);
-          
+
           newWaitingPassengers[floorIdx].push({
             id: nextPersonId++,
             originFloor: floorIdx,
@@ -57,89 +136,21 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
           });
         }
       }
-      
-      // 2. Elevator Action: Drop off passengers
-      const passengersStaying: Person[] = [];
-      newPassengersInElevator.forEach(p => {
-        if (p.destinationFloor !== newElevatorFloor) {
-          passengersStaying.push(p);
-        }
-      });
-      newPassengersInElevator = passengersStaying;
 
-      // 3. Elevator Action: Pick up passengers
-      const currentFloorWaitingList = [...newWaitingPassengers[newElevatorFloor]];
-      const passengersNotPickedUp: Person[] = [];
-      
-      for (const person of currentFloorWaitingList) {
-        if (newPassengersInElevator.length < elevatorCapacity) {
-          let shouldPickUp = false;
-          if (newElevatorDirection === 'up' && person.destinationFloor > newElevatorFloor) {
-            shouldPickUp = true;
-          } else if (newElevatorDirection === 'down' && person.destinationFloor < newElevatorFloor) {
-            shouldPickUp = true;
-          } else if (newElevatorDirection === 'idle') {
-             shouldPickUp = true;
-             if (newPassengersInElevator.length === 0) { 
-                newElevatorDirection = person.destinationFloor > newElevatorFloor ? 'up' : 'down';
-             }
-          }
+      // 2. Process Elevator 1
+      const { updatedElevator: elevator1, updatedWaiting: waitingAfterE1 } =
+        processElevatorTick(prevState.elevator1, newWaitingPassengers, numFloors, elevatorCapacity);
 
-          if (shouldPickUp) {
-            newPassengersInElevator.push(person);
-          } else {
-            passengersNotPickedUp.push(person);
-          }
-        } else {
-          passengersNotPickedUp.push(person); 
-        }
-      }
-      newWaitingPassengers[newElevatorFloor] = passengersNotPickedUp;
+      // 3. Process Elevator 2
+      const { updatedElevator: elevator2, updatedWaiting: waitingAfterE2 } =
+        processElevatorTick(prevState.elevator2, waitingAfterE1, numFloors, elevatorCapacity);
 
-      // 4. Elevator Movement Logic
-      const isAnyoneWaitingAnywhere = newWaitingPassengers.some(floor => floor.length > 0);
-      if (newPassengersInElevator.length === 0 && !isAnyoneWaitingAnywhere) {
-        newElevatorDirection = 'idle';
-      } else {
-        if (newElevatorDirection === 'idle') { // Was idle, but now there's a reason to move
-          if (newPassengersInElevator.length > 0) {
-            newElevatorDirection = newPassengersInElevator[0].destinationFloor > newElevatorFloor ? 'up' : 'down';
-          } else { // People waiting somewhere, elevator empty
-             // Find first floor with waiting passengers
-            const firstWaitingFloorIndex = newWaitingPassengers.findIndex(f => f.length > 0);
-            if (firstWaitingFloorIndex !== -1) {
-                if (firstWaitingFloorIndex > newElevatorFloor) newElevatorDirection = 'up';
-                else if (firstWaitingFloorIndex < newElevatorFloor) newElevatorDirection = 'down';
-                else newElevatorDirection = newWaitingPassengers[firstWaitingFloorIndex][0].destinationFloor > newElevatorFloor ? 'up' : 'down';
-            } else {
-                 newElevatorDirection = 'up'; // Default if logic is stuck
-            }
-          }
-        }
-      }
-
-      // Actual movement
-      if (newElevatorDirection === 'up') {
-        if (newElevatorFloor < numFloors - 1) {
-          newElevatorFloor++;
-        } else { 
-          newElevatorDirection = 'down';
-        }
-      } else if (newElevatorDirection === 'down') {
-        if (newElevatorFloor > 0) {
-          newElevatorFloor--;
-        } else { 
-          newElevatorDirection = 'up';
-        }
-      }
-      // If 'idle', newElevatorFloor remains unchanged
-
+      // 4. Return new state
       return {
-        currentTime: newCurrentTime,
-        elevatorFloor: newElevatorFloor,
-        elevatorDirection: newElevatorDirection,
-        passengersInElevator: newPassengersInElevator,
-        waitingPassengers: newWaitingPassengers,
+        currentTime: prevState.currentTime + 1,
+        elevator1,
+        elevator2,
+        waitingPassengers: waitingAfterE2,
       };
     });
   }, [numFloors, elevatorCapacity]);

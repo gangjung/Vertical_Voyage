@@ -3,12 +3,20 @@
 
 import { BuildingLayout } from '@/components/vertical-voyage/BuildingLayout';
 import { useElevatorSimulation } from '@/hooks/useElevatorSimulation';
+import type { ElevatorState, Person } from '@/hooks/useElevatorSimulation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area'; // For debug panel
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect } from 'react';
 
 const NUM_FLOORS = 10;
 const ELEVATOR_CAPACITY = 4;
+
+const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
+  <>
+    {`\nElevator ${elevator.id}:\n  Floor: ${elevator.floor}\n  Direction: ${elevator.direction}\n  Passengers: ${elevator.passengers.length}\n`}
+    {elevator.passengers.map(p => `    - P${p.id} (O:${p.originFloor} D:${p.destinationFloor})`).join('\n')}
+  </>
+);
 
 export default function VerticalVoyagePage() {
   const simulation = useElevatorSimulation(NUM_FLOORS, ELEVATOR_CAPACITY);
@@ -19,7 +27,6 @@ export default function VerticalVoyagePage() {
   }, []);
 
   if (!isClient) {
-    // Render a loading state or null on the server to avoid hydration mismatch for the debug panel
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background p-2 sm:p-4">
          <Card className="w-full max-w-2xl lg:max-w-4xl shadow-2xl border-primary border-2">
@@ -45,7 +52,12 @@ export default function VerticalVoyagePage() {
           <CardDescription className="text-xs sm:text-sm text-muted-foreground">Elevator Simulation Challenge</CardDescription>
         </CardHeader>
         <CardContent className="p-2 sm:p-3">
-          <BuildingLayout {...simulation} numFloors={NUM_FLOORS} />
+          <BuildingLayout 
+            numFloors={NUM_FLOORS}
+            elevator1={simulation.elevator1}
+            elevator2={simulation.elevator2}
+            waitingPassengers={simulation.waitingPassengers}
+          />
         </CardContent>
       </Card>
       
@@ -54,10 +66,11 @@ export default function VerticalVoyagePage() {
            <CardTitle className="text-lg font-headline">Simulation Log</CardTitle>
          </CardHeader>
          <CardContent className="p-0">
-          <ScrollArea className="h-32 sm:h-40 p-3 border-t">
+          <ScrollArea className="h-48 sm:h-56 p-3 border-t">
             <pre className="text-xs whitespace-pre-wrap break-all">
-              {`Time: ${simulation.currentTime}\nElevator Floor: ${simulation.elevatorFloor}\nDirection: ${simulation.elevatorDirection}\nIn Elevator: ${simulation.passengersInElevator.length} passengers\n`}
-              {simulation.passengersInElevator.map(p => `  - P${p.id} (O:${p.originFloor} D:${p.destinationFloor})`).join('\n')}
+              {`Time: ${simulation.currentTime}`}
+              <ElevatorStatus elevator={simulation.elevator1} />
+              <ElevatorStatus elevator={simulation.elevator2} />
               {`\nWaiting Passengers:\n`}
               {simulation.waitingPassengers.map((floor, i) => 
                 floor.length > 0 ? `  Floor ${i}: ${floor.map(p => `P${p.id}(D:${p.destinationFloor})`).join(', ')}` : null
