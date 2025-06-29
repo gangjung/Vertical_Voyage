@@ -7,7 +7,7 @@ import type { ElevatorState } from '@/hooks/useElevatorSimulation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect } from 'react';
-import { Users, Clock } from 'lucide-react';
+import { Users, Footprints } from 'lucide-react';
 
 const NUM_FLOORS = 10;
 const ELEVATOR_CAPACITY = 4;
@@ -76,10 +76,10 @@ export default function VerticalVoyagePage() {
             </div>
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-muted-foreground">
-                <Clock className="w-4 h-4" />
-                <span>Average Wait Time</span>
+                <Footprints className="w-4 h-4" />
+                <span>Average Wait Steps</span>
                </div>
-              <span className="font-bold text-base">{stats.averageWaitTime.toFixed(1)}s</span>
+              <span className="font-bold text-base">{stats.averageWaitTime.toFixed(1)}</span>
             </div>
          </CardContent>
        </Card>
