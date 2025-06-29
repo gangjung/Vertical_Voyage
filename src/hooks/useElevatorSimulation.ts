@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { manageElevators as defaultManageElevators, type AlgorithmInput, type ElevatorCommand } from '@/ai/elevator-algorithm';
+import { PASSENGER_MANIFEST } from '@/ai/passenger-manifest';
 
 // --- TYPE DEFINITIONS (also exported for custom algorithm use) ---
 export type { AlgorithmInput, ElevatorCommand };
@@ -39,8 +40,6 @@ export interface Stats {
 
 // --- CONSTANTS ---
 const TICK_INTERVAL_MS = 1000;
-const PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR = 0.08;
-const MAX_PASSENGERS_PER_FLOOR_WAITING = 5;
 
 
 // --- HELPER FUNCTION: CORE ELEVATOR LOGIC ---
@@ -116,8 +115,6 @@ export function useElevatorSimulation(
   customManageElevators?: (input: AlgorithmInput) => ElevatorCommand[]
 ): { state: SimulationState, stats: Stats } {
 
-  const nextPersonId = useRef(1);
-  
   const getInitialState = useCallback(() => {
     return {
       state: {
@@ -151,23 +148,14 @@ export function useElevatorSimulation(
       const currentTime = prevState.currentTime;
       const manageElevators = customManageElevators || defaultManageElevators;
 
-      // 1. Passenger Generation
+      // 1. Passenger Generation from Manifest (for fair competition)
       let newWaitingPassengers = prevState.waitingPassengers.map(fp => [...fp]);
-      if(currentTime > 0) { // Don't spawn on the first tick
-        for (let floorIdx = 0; floorIdx < numFloors; floorIdx++) {
-          if (newWaitingPassengers[floorIdx].length < MAX_PASSENGERS_PER_FLOOR_WAITING && Math.random() < PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR) {
-            let destinationFloor;
-            do {
-              destinationFloor = Math.floor(Math.random() * numFloors);
-            } while (destinationFloor === floorIdx);
+      const passengersToSpawn = PASSENGER_MANIFEST.filter(p => p.spawnTime === currentTime);
 
-            newWaitingPassengers[floorIdx].push({
-              id: nextPersonId.current++,
-              originFloor: floorIdx,
-              destinationFloor: destinationFloor,
-              spawnTime: currentTime,
-            });
-          }
+      if (passengersToSpawn.length > 0) {
+        for (const person of passengersToSpawn) {
+          // The manifest contains the full Person object structure (minus optional fields)
+          newWaitingPassengers[person.originFloor].push(person);
         }
       }
 
