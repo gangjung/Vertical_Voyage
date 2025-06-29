@@ -15,14 +15,23 @@ export function PersonIcon({ person, inElevator = false }: PersonIconProps) {
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className={cn(
-              'w-3 h-3 sm:w-4 sm:h-4 rounded-full flex items-center justify-center shadow-md animate-fadeIn',
-              inElevator ? 'bg-background border-2 border-primary' : 'bg-primary',
-              'transition-all duration-300'
-            )}
+            className="flex items-center justify-center gap-0.5 p-0.5 rounded-md animate-fadeIn"
             aria-label={`Person ${person.id} from floor ${person.originFloor} going to floor ${person.destinationFloor}`}
-            data-ai-hint="person silhouette"
           >
+            <div
+              className={cn(
+                'w-3 h-3 sm:w-4 sm:h-4 rounded-full flex items-center justify-center shadow-md shrink-0',
+                inElevator ? 'bg-background border-2 border-primary' : 'bg-primary',
+                'transition-all duration-300'
+              )}
+              data-ai-hint="person silhouette"
+            />
+            <span className={cn(
+              "text-xs font-mono font-bold leading-none",
+              inElevator ? 'text-accent-foreground' : 'text-primary'
+            )}>
+              {person.destinationFloor}
+            </span>
           </div>
         </TooltipTrigger>
         <TooltipContent className="bg-popover text-popover-foreground p-1 px-2 rounded-md shadow-lg text-xs">
