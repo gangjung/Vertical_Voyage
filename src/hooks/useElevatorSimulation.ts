@@ -41,7 +41,6 @@ export interface Stats {
 const TICK_INTERVAL_MS = 1000;
 const PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR = 0.08;
 const MAX_PASSENGERS_PER_FLOOR_WAITING = 5;
-let nextPersonId = 1;
 
 
 // --- HELPER FUNCTION: CORE ELEVATOR LOGIC ---
@@ -116,9 +115,11 @@ export function useElevatorSimulation(
   elevatorCapacity: number,
   customManageElevators?: (input: AlgorithmInput) => ElevatorCommand[]
 ): { state: SimulationState, stats: Stats } {
+
+  const nextPersonId = useRef(1);
   
   const getInitialState = useCallback(() => {
-    nextPersonId = 1; // Reset person ID counter
+    nextPersonId.current = 1; // Reset person ID counter
     return {
       state: {
         currentTime: 0,
@@ -162,7 +163,7 @@ export function useElevatorSimulation(
             } while (destinationFloor === floorIdx);
 
             newWaitingPassengers[floorIdx].push({
-              id: nextPersonId++,
+              id: nextPersonId.current++,
               originFloor: floorIdx,
               destinationFloor: destinationFloor,
               spawnTime: currentTime,
