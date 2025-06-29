@@ -10,6 +10,7 @@ export interface Person {
   originFloor: number;
   destinationFloor: number;
   spawnTime: number;
+  pickupTime?: number; // Time when picked up by an elevator
 }
 
 export interface ElevatorState {
@@ -47,7 +48,8 @@ const processElevatorTick = (
   waitingPassengers: Person[][],
   numFloors: number,
   elevatorCapacity: number,
-  command: ElevatorCommand
+  command: ElevatorCommand,
+  currentTime: number
 ): { updatedElevator: ElevatorState; updatedWaiting: Person[][]; droppedOffPassengers: Person[] } => {
   let newElevator = { ...elevator, passengers: [...elevator.passengers] };
   let newWaiting = waitingPassengers.map(f => [...f]);
@@ -75,7 +77,8 @@ const processElevatorTick = (
         (command === 'up' && wantsToGoUp) ||
         (command === 'down' && wantsToGoDown)
       ) {
-        newElevator.passengers.push(person);
+        const pickedUpPerson: Person = { ...person, pickupTime: currentTime };
+        newElevator.passengers.push(pickedUpPerson);
       } else {
         passengersNotPickedUp.push(person);
       }
@@ -131,7 +134,7 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
       // 1. Passenger Generation
       let newWaitingPassengers = prevState.waitingPassengers.map(fp => [...fp]);
       for (let floorIdx = 0; floorIdx < numFloors; floorIdx++) {
-        if (newWaitingPassengers[floorIdx].length < MAX_PASSENGERS_PER_FLOOR_WAITING && Math.random() < PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR) {
+        if (newWaitingPassengers[floorIdx].length < MAX_PASSENGERS_PER_FLOOR_waiting && Math.random() < PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR) {
           let destinationFloor;
           do {
             destinationFloor = Math.floor(Math.random() * numFloors);
@@ -160,10 +163,10 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
 
       // 3. Process Elevators based on commands
       const { updatedElevator: elevator1, updatedWaiting: waitingAfterE1, droppedOffPassengers: droppedE1 } =
-        processElevatorTick(prevState.elevator1, newWaitingPassengers, numFloors, elevatorCapacity, command1);
+        processElevatorTick(prevState.elevator1, newWaitingPassengers, numFloors, elevatorCapacity, command1, currentTime);
 
       const { updatedElevator: elevator2, updatedWaiting: waitingAfterE2, droppedOffPassengers: droppedE2 } =
-        processElevatorTick(prevState.elevator2, waitingAfterE1, numFloors, elevatorCapacity, command2);
+        processElevatorTick(prevState.elevator2, waitingAfterE1, numFloors, elevatorCapacity, command2, currentTime);
 
       // 4. Update Stats for dropped off passengers
       const allDroppedOff = [...droppedE1, ...droppedE2];
@@ -173,7 +176,9 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
       if (allDroppedOff.length > 0) {
         newTotalPassengersServed += allDroppedOff.length;
         for (const p of allDroppedOff) {
-          const waitTime = currentTime - p.spawnTime;
+          // A passenger must have a pickupTime to be dropped off.
+          // Fallback to spawnTime ensures waitTime is 0 if pickupTime is missing.
+          const waitTime = (p.pickupTime ?? p.spawnTime) - p.spawnTime;
           newTotalWaitTime += waitTime;
         }
       }
