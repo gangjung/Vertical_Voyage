@@ -1,31 +1,28 @@
 // components/vertical-voyage/ElevatorShaft.tsx
-import type { Person } from '@/hooks/useElevatorSimulation';
+import type { Person, ElevatorState } from '@/hooks/useElevatorSimulation';
 import { ElevatorCar } from './ElevatorCar';
 
 interface ElevatorShaftProps {
   numFloors: number;
-  currentFloor: number;
-  passengers: Person[];
-  direction: 'up' | 'down' | 'idle';
-  distanceTraveled: number;
+  elevator: ElevatorState;
 }
 
-export function ElevatorShaft({ numFloors, currentFloor, passengers, direction, distanceTraveled }: ElevatorShaftProps) {
+export function ElevatorShaft({ numFloors, elevator }: ElevatorShaftProps) {
   const floorHeightPercentage = 100 / numFloors;
   
   // Elevator car's bottom position based on current floor
-  const elevatorBottomPercentage = currentFloor * floorHeightPercentage;
+  const elevatorBottomPercentage = elevator.floor * floorHeightPercentage;
 
   return (
-    <div className="w-1/3 relative bg-muted/10 p-1 sm:p-2" data-ai-hint="elevator shaft">
+    <div className="w-1/6 relative bg-muted/10 p-1 sm:p-2 border-x border-primary/10" data-ai-hint="elevator shaft">
       <ElevatorCar
         style={{
           height: `${floorHeightPercentage}%`,
           bottom: `${elevatorBottomPercentage}%`,
         }}
-        passengers={passengers}
-        direction={direction}
-        distanceTraveled={distanceTraveled}
+        passengers={elevator.passengers}
+        direction={elevator.direction}
+        distanceTraveled={elevator.distanceTraveled}
       />
     </div>
   );

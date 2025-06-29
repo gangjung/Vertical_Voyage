@@ -2,6 +2,7 @@ export const exampleAlgorithms = [
     {
         name: '기본: 스마트 분배',
         code: `// 기본 알고리즘: 탑승객 우선, 이후 가장 가까운 호출에 응답합니다.
+// 이 로직은 엘리베이터 수에 상관없이 동작합니다.
 function manageElevators(input) {
   const { elevators, waitingPassengers, numFloors } = input;
   
@@ -68,13 +69,15 @@ function manageElevators(input) {
     },
     {
         name: '구역 분할 전략',
-        code: `// 구역 분할 전략: 1호기는 저층, 2호기는 고층을 담당합니다.
+        code: `// 구역 분할 전략: 엘리베이터 절반은 저층, 절반은 고층을 담당합니다.
 function manageElevators(input) {
     const { elevators, waitingPassengers, numFloors } = input;
     const midFloor = Math.floor(numFloors / 2);
 
     const getCommandForElevator = (elevator, isLowerZone) => {
-        const myZoneFloors = isLowerZone ? { start: 0, end: midFloor - 1 } : { start: midFloor, end: numFloors - 1 };
+        const myZoneFloors = isLowerZone 
+            ? { start: 0, end: midFloor - 1 } 
+            : { start: midFloor, end: numFloors - 1 };
 
         // 1. 탑승객 목적지 처리
         if (elevator.passengers.length > 0) {
@@ -104,33 +107,37 @@ function manageElevators(input) {
         }
         
         // 3. 할 일이 없으면 구역의 중앙으로 이동
-        const baseFloor = isLowerZone ? Math.floor(midFloor / 2) : midFloor + Math.floor((numFloors - midFloor) / 2);
+        const baseFloor = isLowerZone 
+            ? Math.floor(midFloor / 2) 
+            : midFloor + Math.floor((numFloors - midFloor) / 2);
         if (elevator.floor > baseFloor) return 'down';
         if (elevator.floor < baseFloor) return 'up';
 
         return 'idle';
     };
     
-    const command1 = getCommandForElevator(elevators[0], true); // 1호기 -> 저층
-    const command2 = getCommandForElevator(elevators[1], false); // 2호기 -> 고층
+    const commands = elevators.map((elevator, index) => {
+        // 엘리베이터 ID(1-based)가 엘리베이터 총 수의 절반보다 작거나 같으면 저층 담당
+        const isLowerZone = elevator.id <= elevators.length / 2;
+        return getCommandForElevator(elevator, isLowerZone);
+    });
 
-    return [command1, command2];
+    return commands;
 }`
     },
     {
         name: '홀/짝수층 전략',
-        code: `// 홀/짝수층 전략: 1호기는 홀수층, 2호기는 짝수층을 담당합니다.
-// (단, 모든 층에 갈 수 있도록 다른 층 승객도 태웁니다.)
+        code: `// 홀/짝수층 전략: 엘리베이터를 홀수층 담당과 짝수층 담당으로 나눕니다.
 function manageElevators(input) {
     const { elevators, waitingPassengers } = input;
 
-    const getCommandForElevator = (elevator, isOdd) => {
-        const myFloorTypeCheck = (floor) => isOdd ? floor % 2 !== 0 : floor % 2 === 0;
+    const getCommandForElevator = (elevator, isOddFloorElevator) => {
+        const myFloorTypeCheck = (floor) => isOddFloorElevator ? floor % 2 !== 0 : floor % 2 === 0;
 
         // 1. 내 담당 층으로 가는 탑승객 우선 처리
         const myPassengers = elevator.passengers.filter(p => myFloorTypeCheck(p.destinationFloor));
         if (myPassengers.length > 0) {
-            const nextDest = myPassengers[0].destinationFloor;
+            const nextDest = myPassengers.sort((a,b) => Math.abs(elevator.floor - a.destinationFloor) - Math.abs(elevator.floor - b.destinationFloor))[0].destinationFloor;
             if (nextDest > elevator.floor) return 'up';
             if (nextDest < elevator.floor) return 'down';
             return 'idle';
@@ -164,13 +171,15 @@ function manageElevators(input) {
             return 'idle';
         }
         
-        // 4. 담당이 아니지만 다른 층에서 부르면 이동
+        // 4. 담당이 아니지만 다른 층에서 부르면 이동 (협력)
         waitingPassengers.forEach((passengers, floor) => {
             if (passengers.length > 0) {
-                const distance = Math.abs(elevator.floor - floor);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestCall = floor;
+                 if (closestCall === -1) { // 아직 호출 못찾았을때만
+                    const distance = Math.abs(elevator.floor - floor);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestCall = floor;
+                    }
                 }
             }
         });
@@ -184,10 +193,13 @@ function manageElevators(input) {
         return 'idle';
     };
     
-    const command1 = getCommandForElevator(elevators[0], true); // 1호기 -> 홀수층
-    const command2 = getCommandForElevator(elevators[1], false); // 2호기 -> 짝수층
+    const commands = elevators.map((elevator, index) => {
+        // 엘리베이터 ID(1-based)가 홀수면 홀수층, 짝수면 짝수층 담당
+        const isOddFloorElevator = elevator.id % 2 !== 0;
+        return getCommandForElevator(elevator, isOddFloorElevator);
+    });
 
-    return [command1, command2];
+    return commands;
 }`
     }
 ];

@@ -31,7 +31,7 @@ export type ElevatorCommand = 'up' | 'down' | 'idle';
  * 
  * @param input 시뮬레이션의 현재 상태 데이터 (`AlgorithmInput` 타입)
  * @returns 각 엘리베이터에 대한 명령어 배열 (`ElevatorCommand[]` 타입). 배열의 길이는 엘리베이터 수와 같아야 합니다.
- *          예: 엘리베이터가 2대일 경우 ['up', 'down']
+ *          예: 엘리베이터가 4대일 경우 ['up', 'down', 'idle', 'up']
  */
 export function manageElevators(input: AlgorithmInput): ElevatorCommand[] {
   // =================================================================

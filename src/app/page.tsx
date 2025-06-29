@@ -20,6 +20,7 @@ import type { PassengerManifest } from '@/ai/passenger-scenarios';
 
 const NUM_FLOORS = 10;
 const ELEVATOR_CAPACITY = 8;
+const NUM_ELEVATORS = 4;
 
 const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
   <>
@@ -68,9 +69,16 @@ export default function VerticalVoyagePage() {
       `);
 
       // Test the function with a dummy input to catch basic errors
-      const testResult = newAlgorithm({ currentTime: 0, elevators: [{id: 1, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0}, {id: 2, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0}], waitingPassengers: Array.from({ length: NUM_FLOORS }, () => []), numFloors: NUM_FLOORS, elevatorCapacity: ELEVATOR_CAPACITY});
-      if (!Array.isArray(testResult) || testResult.length !== 2) {
-         throw new Error('함수는 2대의 엘리베이터에 대한 명령어 배열을 반환해야 합니다.');
+      const testElevators = Array.from({ length: NUM_ELEVATORS }, (_, i) => ({
+        id: i + 1,
+        floor: 0,
+        direction: 'idle',
+        passengers: [],
+        distanceTraveled: 0
+      }));
+      const testResult = newAlgorithm({ currentTime: 0, elevators: testElevators, waitingPassengers: Array.from({ length: NUM_FLOORS }, () => []), numFloors: NUM_FLOORS, elevatorCapacity: ELEVATOR_CAPACITY});
+      if (!Array.isArray(testResult) || testResult.length !== NUM_ELEVATORS) {
+         throw new Error(`함수는 ${NUM_ELEVATORS}대의 엘리베이터에 대한 명령어 배열을 반환해야 합니다.`);
       }
       
       // Set the new function for the simulation hook to use.
@@ -115,7 +123,7 @@ export default function VerticalVoyagePage() {
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-background p-2 sm:p-4 pt-4 sm:pt-8">
-      <Card className="w-full max-w-2xl lg:max-w-4xl shadow-2xl border-primary/50 border">
+      <Card className="w-full max-w-4xl lg:max-w-6xl shadow-2xl border-primary/50 border">
         <CardHeader className="text-center pb-2 pt-4">
           <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-headline text-primary">Vertical Voyage</CardTitle>
           <CardDescription className="text-xs sm:text-sm text-muted-foreground">Elevator Simulation Challenge</CardDescription>
@@ -123,15 +131,14 @@ export default function VerticalVoyagePage() {
         <CardContent className="p-2 sm:p-3">
           <BuildingLayout 
             numFloors={NUM_FLOORS}
-            elevator1={simulation.elevator1}
-            elevator2={simulation.elevator2}
+            elevators={simulation.elevators}
             waitingPassengers={simulation.waitingPassengers}
           />
         </CardContent>
       </Card>
 
       {stats.totalOperatingTime > 0 && (
-        <Card className="mt-4 w-full max-w-2xl lg:max-w-4xl shadow-lg border-2 border-accent animate-fadeIn">
+        <Card className="mt-4 w-full max-w-4xl lg:max-w-6xl shadow-lg border-2 border-accent animate-fadeIn">
           <CardHeader className="pb-2 pt-3">
             <CardTitle className="text-lg font-headline flex items-center gap-2 text-accent">
               <Trophy className="w-5 h-5" />
@@ -168,7 +175,7 @@ export default function VerticalVoyagePage() {
         </Card>
       )}
 
-       <Card className="mt-4 w-full max-w-2xl lg:max-w-4xl shadow-lg">
+       <Card className="mt-4 w-full max-w-4xl lg:max-w-6xl shadow-lg">
          <CardHeader className="pb-2 pt-3">
            <CardTitle className="text-lg font-headline flex items-center gap-2"><Milestone /> Algorithm Performance</CardTitle>
          </CardHeader>
@@ -204,7 +211,7 @@ export default function VerticalVoyagePage() {
          </CardContent>
        </Card>
 
-      <Card className="mt-4 w-full max-w-2xl lg:max-w-4xl shadow-lg">
+      <Card className="mt-4 w-full max-w-4xl lg:max-w-6xl shadow-lg">
         <CardHeader className="pb-2 pt-3">
           <CardTitle className="text-lg font-headline flex items-center gap-2"><Settings className="w-5 h-5" /> Simulation Settings</CardTitle>
         </CardHeader>
@@ -233,7 +240,7 @@ export default function VerticalVoyagePage() {
         </CardContent>
       </Card>
 
-      <Card className="mt-4 w-full max-w-2xl lg:max-w-4xl shadow-lg">
+      <Card className="mt-4 w-full max-w-4xl lg:max-w-6xl shadow-lg">
          <CardHeader className="pb-2 pt-3 flex flex-row items-center justify-between">
            <div className="flex items-center gap-2">
             <Code className="w-5 h-5 text-primary"/>
@@ -315,7 +322,7 @@ export default function VerticalVoyagePage() {
                <div>
                   <h4 className="font-medium text-foreground">반환값:</h4>
                   <p className="text-xs mt-1">
-                      엘리베이터 2대에 대한 명령이 담긴 배열을 반환해야 합니다. 각 명령은 <code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, 또는 <code className="p-0.5 rounded bg-muted">'idle'</code> 중 하나여야 합니다. (예: <code className="p-0.5 rounded bg-muted">['up', 'down']</code>)
+                      엘리베이터 {NUM_ELEVATORS}대에 대한 명령이 담긴 배열을 반환해야 합니다. 각 명령은 <code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, 또는 <code className="p-0.5 rounded bg-muted">'idle'</code> 중 하나여야 합니다. (예: <code className="p-0.5 rounded bg-muted">['up', 'down', 'idle', 'up']</code>)
                   </p>
               </div>
             </div>
@@ -334,7 +341,7 @@ export default function VerticalVoyagePage() {
           </CardFooter>
        </Card>
       
-       <Card className="my-4 w-full max-w-2xl lg:max-w-4xl shadow-lg">
+       <Card className="my-4 w-full max-w-4xl lg:max-w-6xl shadow-lg">
          <CardHeader className="pb-2 pt-3">
            <CardTitle className="text-lg font-headline">Simulation Log</CardTitle>
          </CardHeader>
@@ -342,8 +349,9 @@ export default function VerticalVoyagePage() {
           <ScrollArea className="h-48 sm:h-56 p-3 border-t">
             <pre className="text-xs whitespace-pre-wrap break-all">
               {`Time: ${simulation.currentTime}`}
-              <ElevatorStatus elevator={simulation.elevator1} />
-              <ElevatorStatus elevator={simulation.elevator2} />
+              {simulation.elevators.map(elevator => (
+                <ElevatorStatus elevator={elevator} key={elevator.id} />
+              ))}
               {`\nWaiting Passengers:\n`}
               {simulation.waitingPassengers.map((floor, i) => 
                 floor.length > 0 ? `  Floor ${i}: ${floor.map(p => `P${p.id}(D:${p.destinationFloor})`).join(', ')}` : null

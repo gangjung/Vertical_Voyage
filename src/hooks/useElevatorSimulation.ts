@@ -26,8 +26,7 @@ export interface ElevatorState {
 
 export interface SimulationState {
   currentTime: number;
-  elevator1: ElevatorState;
-  elevator2: ElevatorState;
+  elevators: ElevatorState[];
   waitingPassengers: Person[][];
 }
 
@@ -46,6 +45,7 @@ export interface Stats {
 
 // --- CONSTANTS ---
 const TICK_INTERVAL_MS = 1000;
+const NUM_ELEVATORS = 4;
 
 
 // --- HELPER FUNCTION: CORE ELEVATOR LOGIC ---
@@ -126,8 +126,13 @@ export function useElevatorSimulation(
     return {
       state: {
         currentTime: 0,
-        elevator1: { id: 1, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
-        elevator2: { id: 2, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
+        elevators: Array.from({ length: NUM_ELEVATORS }, (_, i) => ({
+          id: i + 1,
+          floor: 0,
+          direction: 'idle',
+          passengers: [],
+          distanceTraveled: 0,
+        })),
         waitingPassengers: Array.from({ length: numFloors }, () => []),
       },
       stats: {
@@ -182,7 +187,7 @@ export function useElevatorSimulation(
       // 2. Call the active algorithm to get commands
       const algorithmInput: AlgorithmInput = {
         currentTime: currentTime,
-        elevators: [prevState.elevator1, prevState.elevator2],
+        elevators: prevState.elevators,
         waitingPassengers: newWaitingPassengers,
         numFloors: numFloors,
         elevatorCapacity: elevatorCapacity,
@@ -191,26 +196,31 @@ export function useElevatorSimulation(
       let commands: ElevatorCommand[];
       try {
         commands = manageElevators(algorithmInput);
-        if (!Array.isArray(commands) || commands.length !== 2) {
-            console.error("Algorithm must return an array with 2 commands. Reverting to idle.");
-            commands = ['idle', 'idle'];
+        if (!Array.isArray(commands) || commands.length !== NUM_ELEVATORS) {
+            console.error(`Algorithm must return an array with ${NUM_ELEVATORS} commands. Reverting to idle.`);
+            commands = Array(NUM_ELEVATORS).fill('idle');
         }
       } catch (e) {
           console.error("Error executing custom algorithm:", e);
-          commands = ['idle', 'idle']; // Failsafe
+          commands = Array(NUM_ELEVATORS).fill('idle'); // Failsafe
       }
-      const [command1, command2] = commands;
-
-
+      
       // 3. Process Elevators based on commands
-      const { updatedElevator: elevator1, updatedWaiting: waitingAfterE1, droppedOffPassengers: droppedE1 } =
-        processElevatorTick(prevState.elevator1, newWaitingPassengers, numFloors, elevatorCapacity, command1, currentTime);
+      let processedWaiting = newWaitingPassengers;
+      const updatedElevators: ElevatorState[] = [];
+      const allDroppedOff: Person[] = [];
 
-      const { updatedElevator: elevator2, updatedWaiting: waitingAfterE2, droppedOffPassengers: droppedE2 } =
-        processElevatorTick(prevState.elevator2, waitingAfterE1, numFloors, elevatorCapacity, command2, currentTime);
+      prevState.elevators.forEach((elevator, index) => {
+        const command = commands[index];
+        const { updatedElevator, updatedWaiting, droppedOffPassengers } =
+          processElevatorTick(elevator, processedWaiting, numFloors, elevatorCapacity, command, currentTime);
+        
+        updatedElevators.push(updatedElevator);
+        processedWaiting = updatedWaiting;
+        allDroppedOff.push(...droppedOffPassengers);
+      });
 
       // 4. Update Stats for dropped off passengers
-      const allDroppedOff = [...droppedE1, ...droppedE2];
       let { 
         totalPassengersServed: newTotalPassengersServed,
         totalWaitTime: newTotalWaitTime,
@@ -240,16 +250,15 @@ export function useElevatorSimulation(
           newTotalOperatingTime = currentTime;
       }
       
-      const newTotalDistanceTraveled = elevator1.distanceTraveled + elevator2.distanceTraveled;
+      const newTotalDistanceTraveled = updatedElevators.reduce((sum, e) => sum + e.distanceTraveled, 0);
 
 
       // 5. Return new state and stats
       return {
         state: {
           currentTime: currentTime,
-          elevator1,
-          elevator2,
-          waitingPassengers: waitingAfterE2,
+          elevators: updatedElevators,
+          waitingPassengers: processedWaiting,
         },
         stats: {
           totalPassengersServed: newTotalPassengersServed,
