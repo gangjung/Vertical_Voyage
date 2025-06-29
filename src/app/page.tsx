@@ -168,7 +168,7 @@ export default function VerticalVoyagePage() {
          <CardHeader className="pb-2 pt-3">
            <CardTitle className="text-lg font-headline flex items-center gap-2"><Milestone /> Algorithm Performance</CardTitle>
          </CardHeader>
-         <CardContent className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-2 gap-x-4 text-sm border-t">
+         <CardContent className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm border-t">
            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Timer className="w-4 h-4" />
