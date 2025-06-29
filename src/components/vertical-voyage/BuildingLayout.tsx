@@ -19,6 +19,7 @@ export function BuildingLayout({ numFloors, elevator1, elevator2, waitingPasseng
         currentFloor={elevator1.floor}
         passengers={elevator1.passengers}
         direction={elevator1.direction}
+        distanceTraveled={elevator1.distanceTraveled}
       />
 
       {/* Floors Display in the center */}
@@ -34,6 +35,7 @@ export function BuildingLayout({ numFloors, elevator1, elevator2, waitingPasseng
         currentFloor={elevator2.floor}
         passengers={elevator2.passengers}
         direction={elevator2.direction}
+        distanceTraveled={elevator2.distanceTraveled}
       />
     </div>
   );

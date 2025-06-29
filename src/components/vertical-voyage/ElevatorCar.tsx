@@ -1,16 +1,17 @@
 // components/vertical-voyage/ElevatorCar.tsx
 import type { Person } from '@/hooks/useElevatorSimulation';
 import { PersonIcon } from './PersonIcon';
-import { ArrowUp, ArrowDown, MinusSquare } from 'lucide-react'; // MinusSquare for idle
+import { ArrowUp, ArrowDown, MinusSquare, Pin } from 'lucide-react'; // MinusSquare for idle
 import { cn } from '@/lib/utils';
 
 interface ElevatorCarProps {
   style: React.CSSProperties;
   passengers: Person[];
   direction: 'up' | 'down' | 'idle';
+  distanceTraveled: number;
 }
 
-export function ElevatorCar({ style, passengers, direction }: ElevatorCarProps) {
+export function ElevatorCar({ style, passengers, direction, distanceTraveled }: ElevatorCarProps) {
   const DirectionIcon = direction === 'up' ? ArrowUp : direction === 'down' ? ArrowDown : MinusSquare;
   return (
     <div
@@ -22,7 +23,17 @@ export function ElevatorCar({ style, passengers, direction }: ElevatorCarProps) 
       aria-label={`Elevator car. Direction: ${direction}. Passengers: ${passengers.length}`}
       data-ai-hint="elevator cabin"
     >
-      <DirectionIcon className="w-3 h-3 sm:w-4 sm:h-4 text-accent-foreground shrink-0" />
+      {/* Top part: Direction icon and Distance */}
+      <div className="w-full flex justify-between items-center px-0.5">
+        <DirectionIcon className="w-3 h-3 sm:w-4 sm:h-4 text-accent-foreground shrink-0" />
+        <div className="flex items-center gap-0.5">
+          <Pin className="w-2 h-2 sm:w-3 sm:h-3 text-accent-foreground" />
+          <span className="text-[10px] sm:text-xs font-mono text-accent-foreground font-bold">
+            {distanceTraveled}
+          </span>
+        </div>
+      </div>
+      
       <div className="flex flex-wrap justify-center gap-0.5 sm:gap-1 my-0.5 sm:my-1 overflow-hidden flex-grow items-center">
         {passengers.map((person) => (
           <PersonIcon key={person.id} person={person} inElevator={true} />

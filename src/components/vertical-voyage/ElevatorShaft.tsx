@@ -7,9 +7,10 @@ interface ElevatorShaftProps {
   currentFloor: number;
   passengers: Person[];
   direction: 'up' | 'down' | 'idle';
+  distanceTraveled: number;
 }
 
-export function ElevatorShaft({ numFloors, currentFloor, passengers, direction }: ElevatorShaftProps) {
+export function ElevatorShaft({ numFloors, currentFloor, passengers, direction, distanceTraveled }: ElevatorShaftProps) {
   const floorHeightPercentage = 100 / numFloors;
   
   // Elevator car's bottom position based on current floor
@@ -24,6 +25,7 @@ export function ElevatorShaft({ numFloors, currentFloor, passengers, direction }
         }}
         passengers={passengers}
         direction={direction}
+        distanceTraveled={distanceTraveled}
       />
     </div>
   );
