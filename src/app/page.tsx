@@ -18,7 +18,7 @@ import { passengerScenarios } from '@/ai/passenger-scenarios';
 import type { PassengerManifest } from '@/ai/passenger-scenarios';
 
 const NUM_FLOORS = 10;
-const ELEVATOR_CAPACITY = 4;
+const ELEVATOR_CAPACITY = 8;
 
 const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
   <>
