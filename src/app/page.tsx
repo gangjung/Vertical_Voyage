@@ -289,7 +289,10 @@ export default function VerticalVoyagePage() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-2">
-              아래에 `manageElevators` 함수를 JavaScript로 작성하여 붙여넣거나, 위 예시 중 하나를 선택하여 수정해보세요.
+              아래에 `manageElevators` 함수를 JavaScript로 작성하여 붙여넣거나, 위 예시 중 하나를 선택하여 수정해보세요. 
+              함수에 전달되는 데이터 구조와 반환값에 대한 자세한 설명은 
+              <code className="mx-1 p-1 rounded bg-muted text-muted-foreground/80 text-xs">src/ai/elevator-algorithm.ts</code>
+              파일의 주석을 참고하세요.
             </p>
             <Textarea
               value={code}
