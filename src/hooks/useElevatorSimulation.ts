@@ -2,9 +2,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { manageElevators, type AlgorithmInput, type ElevatorCommand } from '@/ai/elevator-algorithm';
+import { manageElevators as defaultManageElevators, type AlgorithmInput, type ElevatorCommand } from '@/ai/elevator-algorithm';
 
-// --- TYPE DEFINITIONS ---
+// --- TYPE DEFINITIONS (also exported for custom algorithm use) ---
+export type { AlgorithmInput, ElevatorCommand };
+
 export interface Person {
   id: number;
   originFloor: number;
@@ -75,7 +77,8 @@ const processElevatorTick = (
       if (
         newElevator.passengers.length === 0 ||
         (command === 'up' && wantsToGoUp) ||
-        (command === 'down' && wantsToGoDown)
+        (command === 'down' && wantsToGoDown) ||
+        command === 'idle' // Pick up if idle and someone is waiting on this floor
       ) {
         const pickedUpPerson: Person = { ...person, pickupTime: currentTime };
         newElevator.passengers.push(pickedUpPerson);
@@ -108,48 +111,67 @@ const processElevatorTick = (
 
 
 // --- MAIN HOOK ---
-export function useElevatorSimulation(numFloors: number, elevatorCapacity: number): { state: SimulationState, stats: Stats } {
-  const [simulation, setSimulation] = useState<{ state: SimulationState, stats: Stats }>({
-    state: {
-      currentTime: 0,
-      elevator1: { id: 1, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
-      elevator2: { id: 2, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
-      waitingPassengers: Array.from({ length: numFloors }, () => []),
-    },
-    stats: {
-      totalPassengersServed: 0,
-      totalWaitTime: 0,
-      averageWaitTime: 0,
+export function useElevatorSimulation(
+  numFloors: number,
+  elevatorCapacity: number,
+  customManageElevators?: (input: AlgorithmInput) => ElevatorCommand[]
+): { state: SimulationState, stats: Stats } {
+  
+  const getInitialState = useCallback(() => {
+    nextPersonId = 1; // Reset person ID counter
+    return {
+      state: {
+        currentTime: 0,
+        elevator1: { id: 1, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
+        elevator2: { id: 2, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
+        waitingPassengers: Array.from({ length: numFloors }, () => []),
+      },
+      stats: {
+        totalPassengersServed: 0,
+        totalWaitTime: 0,
+        averageWaitTime: 0,
+      }
     }
-  });
+  }, [numFloors]);
+
+  const [simulation, setSimulation] = useState<{ state: SimulationState, stats: Stats }>(getInitialState());
 
   const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Effect to reset the simulation when the algorithm or parameters change
+  useEffect(() => {
+    setSimulation(getInitialState());
+  }, [customManageElevators, numFloors, elevatorCapacity, getInitialState]);
+
 
   const tick = useCallback(() => {
     setSimulation(prevSimulation => {
       const prevState = prevSimulation.state;
       const prevStats = prevSimulation.stats;
       const currentTime = prevState.currentTime;
+      const manageElevators = customManageElevators || defaultManageElevators;
 
       // 1. Passenger Generation
       let newWaitingPassengers = prevState.waitingPassengers.map(fp => [...fp]);
-      for (let floorIdx = 0; floorIdx < numFloors; floorIdx++) {
-        if (newWaitingPassengers[floorIdx].length < MAX_PASSENGERS_PER_FLOOR_WAITING && Math.random() < PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR) {
-          let destinationFloor;
-          do {
-            destinationFloor = Math.floor(Math.random() * numFloors);
-          } while (destinationFloor === floorIdx);
+      if(currentTime > 0) { // Don't spawn on the first tick
+        for (let floorIdx = 0; floorIdx < numFloors; floorIdx++) {
+          if (newWaitingPassengers[floorIdx].length < MAX_PASSENGERS_PER_FLOOR_WAITING && Math.random() < PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR) {
+            let destinationFloor;
+            do {
+              destinationFloor = Math.floor(Math.random() * numFloors);
+            } while (destinationFloor === floorIdx);
 
-          newWaitingPassengers[floorIdx].push({
-            id: nextPersonId++,
-            originFloor: floorIdx,
-            destinationFloor: destinationFloor,
-            spawnTime: currentTime,
-          });
+            newWaitingPassengers[floorIdx].push({
+              id: nextPersonId++,
+              originFloor: floorIdx,
+              destinationFloor: destinationFloor,
+              spawnTime: currentTime,
+            });
+          }
         }
       }
 
-      // 2. Call the user-defined algorithm to get commands
+      // 2. Call the active algorithm to get commands
       const algorithmInput: AlgorithmInput = {
         currentTime: currentTime,
         elevators: [prevState.elevator1, prevState.elevator2],
@@ -157,7 +179,18 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
         numFloors: numFloors,
         elevatorCapacity: elevatorCapacity,
       };
-      const commands = manageElevators(algorithmInput);
+      
+      let commands: ElevatorCommand[];
+      try {
+        commands = manageElevators(algorithmInput);
+        if (!Array.isArray(commands) || commands.length !== 2) {
+            console.error("Algorithm must return an array with 2 commands. Reverting to idle.");
+            commands = ['idle', 'idle'];
+        }
+      } catch (e) {
+          console.error("Error executing custom algorithm:", e);
+          commands = ['idle', 'idle']; // Failsafe
+      }
       const [command1, command2] = commands;
 
 
@@ -176,8 +209,6 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
       if (allDroppedOff.length > 0) {
         newTotalPassengersServed += allDroppedOff.length;
         for (const p of allDroppedOff) {
-          // A passenger must have a pickupTime to be dropped off.
-          // Fallback to spawnTime ensures waitTime is 0 if pickupTime is missing.
           const waitTime = (p.pickupTime ?? p.spawnTime) - p.spawnTime;
           newTotalWaitTime += waitTime;
         }
@@ -201,9 +232,12 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
         }
       };
     });
-  }, [numFloors, elevatorCapacity]);
+  }, [numFloors, elevatorCapacity, customManageElevators]);
 
   useEffect(() => {
+    if (simulationIntervalRef.current) {
+      clearInterval(simulationIntervalRef.current);
+    }
     simulationIntervalRef.current = setInterval(tick, TICK_INTERVAL_MS);
     return () => {
       if (simulationIntervalRef.current) {
