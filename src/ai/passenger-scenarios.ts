@@ -1,4 +1,5 @@
 // src/ai/passenger-scenarios.ts
+// 개발자 참고: 새로운 승객 시나리오를 생성할 때, 특정 층에 승객이 과도하게 몰리지 않도록 (예: 동시에 15명 이상 대기) 고려하여 분산시켜주세요.
 import type { Person } from '@/hooks/useElevatorSimulation';
 
 // This type is exported for use in other files
