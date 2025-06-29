@@ -1,3 +1,4 @@
+
 // app/page.tsx
 "use client";
 
@@ -304,7 +305,7 @@ export default function VerticalVoyagePage() {
                           <ul className="list-['-_'] list-inside pl-4 mt-1">
                               <li><code className="p-0.5 rounded bg-muted">floor</code>: 현재 층 (0부터 시작)</li>
                               <li><code className="p-0.5 rounded bg-muted">direction</code>: 현재 방향 ('up', 'down', 'idle')</li>
-                              <li><code className="p-0.5 rounded bg-muted">passengers</code>: 탑승 중인 승객 배열 (각 승객은 <code className="p-0.5 rounded bg-muted">destinationFloor</code> 속성을 가짐)</li>
+                              <li><code className="p-0.5 rounded bg-muted">passengers</code>: 탑승 중인 승객 배열 (각 승객 객체는 목적지 층을 의미하는 <code className="p-0.5 rounded bg-muted">destinationFloor</code> 속성을 가집니다)</li>
                               <li><code className="p-0.5 rounded bg-muted">distanceTraveled</code>: 총 이동 거리</li>
                           </ul>
                       </li>
