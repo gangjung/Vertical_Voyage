@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { manageElevators as defaultManageElevators, type AlgorithmInput, type ElevatorCommand } from '@/ai/elevator-algorithm';
-import { PASSENGER_MANIFEST } from '@/ai/passenger-manifest';
+import type { PassengerManifest } from '@/ai/passenger-scenarios';
 
 // --- TYPE DEFINITIONS (also exported for custom algorithm use) ---
 export type { AlgorithmInput, ElevatorCommand };
@@ -118,6 +118,7 @@ const processElevatorTick = (
 export function useElevatorSimulation(
   numFloors: number,
   elevatorCapacity: number,
+  passengerManifest: PassengerManifest,
   customManageElevators?: (input: AlgorithmInput) => ElevatorCommand[]
 ): { state: SimulationState, stats: Stats } {
 
@@ -150,7 +151,7 @@ export function useElevatorSimulation(
   // Effect to reset the simulation when the algorithm or parameters change
   useEffect(() => {
     setSimulation(getInitialState());
-  }, [customManageElevators, numFloors, elevatorCapacity, getInitialState]);
+  }, [customManageElevators, numFloors, elevatorCapacity, getInitialState, passengerManifest]);
 
 
   const tick = useCallback(() => {
@@ -170,7 +171,7 @@ export function useElevatorSimulation(
 
       // 1. Passenger Generation from Manifest
       let newWaitingPassengers = prevState.waitingPassengers.map(fp => [...fp]);
-      const passengersToSpawn = PASSENGER_MANIFEST.filter(p => p.spawnTime === currentTime);
+      const passengersToSpawn = passengerManifest.filter(p => p.spawnTime === currentTime);
 
       if (passengersToSpawn.length > 0) {
         for (const person of passengersToSpawn) {
@@ -235,7 +236,7 @@ export function useElevatorSimulation(
       const newAverageJourneyTime = newTotalPassengersServed > 0 ? newTotalJourneyTime / newTotalPassengersServed : 0;
 
       // Check if the simulation is complete
-      if (newTotalPassengersServed === PASSENGER_MANIFEST.length && newTotalOperatingTime === 0) {
+      if (newTotalPassengersServed === passengerManifest.length && newTotalOperatingTime === 0) {
           newTotalOperatingTime = currentTime;
       }
       
@@ -263,7 +264,7 @@ export function useElevatorSimulation(
         }
       };
     });
-  }, [numFloors, elevatorCapacity, customManageElevators, defaultManageElevators, simulation.stats.totalOperatingTime]);
+  }, [numFloors, elevatorCapacity, customManageElevators, defaultManageElevators, simulation.stats.totalOperatingTime, passengerManifest]);
 
   useEffect(() => {
     if (simulationIntervalRef.current) {

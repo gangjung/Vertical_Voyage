@@ -10,11 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { Users, Footprints, Code, Play, Trophy, Clock, Route, Milestone, Timer } from 'lucide-react';
+import { Users, Footprints, Code, Play, Trophy, Clock, Route, Milestone, Timer, UsersRound } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exampleAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
-import { PASSENGER_MANIFEST } from '@/ai/passenger-manifest';
+import { passengerScenarios } from '@/ai/passenger-scenarios';
+import type { PassengerManifest } from '@/ai/passenger-scenarios';
 
 const NUM_FLOORS = 10;
 const ELEVATOR_CAPACITY = 4;
@@ -31,10 +32,12 @@ export default function VerticalVoyagePage() {
   const { toast } = useToast();
   const [code, setCode] = useState(exampleAlgorithms[0].code);
   const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(null);
+  const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
 
   const { state: simulation, stats } = useElevatorSimulation(
     NUM_FLOORS, 
     ELEVATOR_CAPACITY,
+    passengerManifest,
     customAlgorithm || undefined
   );
   
@@ -181,7 +184,7 @@ export default function VerticalVoyagePage() {
                 <Users className="w-4 h-4" />
                 <span>Passengers Served</span>
               </div>
-              <span className="font-bold text-base">{stats.totalPassengersServed} / {PASSENGER_MANIFEST.length}</span>
+              <span className="font-bold text-base">{stats.totalPassengersServed} / {passengerManifest.length}</span>
             </div>
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-muted-foreground">
@@ -208,28 +211,53 @@ export default function VerticalVoyagePage() {
            </div>
          </CardHeader>
           <CardContent className="p-3 border-t">
-            <div className="mb-4">
-              <Label htmlFor="algorithm-select" className="mb-2 block text-sm font-medium">알고리즘 예시 선택</Label>
-              <Select
-                onValueChange={(value) => {
-                  const selectedAlgo = exampleAlgorithms.find(algo => algo.name === value);
-                  if (selectedAlgo) {
-                    setCode(selectedAlgo.code);
-                  }
-                }}
-                defaultValue={exampleAlgorithms[0].name}
-              >
-                <SelectTrigger id="algorithm-select" className="w-full sm:w-[280px]">
-                  <SelectValue placeholder="예시를 선택하세요" />
-                </SelectTrigger>
-                <SelectContent>
-                  {exampleAlgorithms.map((algo) => (
-                    <SelectItem key={algo.name} value={algo.name}>
-                      {algo.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="scenario-select" className="mb-2 block text-sm font-medium"><UsersRound className="inline-block w-4 h-4 mr-1"/>승객 시나리오 선택</Label>
+                <Select
+                  onValueChange={(value) => {
+                    const selectedScenario = passengerScenarios.find(s => s.name === value);
+                    if (selectedScenario) {
+                      setPassengerManifest(selectedScenario.manifest);
+                    }
+                  }}
+                  defaultValue={passengerScenarios[0].name}
+                >
+                  <SelectTrigger id="scenario-select" className="w-full">
+                    <SelectValue placeholder="시나리오를 선택하세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {passengerScenarios.map((scenario) => (
+                      <SelectItem key={scenario.name} value={scenario.name}>
+                        {scenario.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="algorithm-select" className="mb-2 block text-sm font-medium"><Code className="inline-block w-4 h-4 mr-1"/>알고리즘 예시 선택</Label>
+                <Select
+                  onValueChange={(value) => {
+                    const selectedAlgo = exampleAlgorithms.find(algo => algo.name === value);
+                    if (selectedAlgo) {
+                      setCode(selectedAlgo.code);
+                    }
+                  }}
+                  defaultValue={exampleAlgorithms[0].name}
+                >
+                  <SelectTrigger id="algorithm-select" className="w-full">
+                    <SelectValue placeholder="예시를 선택하세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {exampleAlgorithms.map((algo) => (
+                      <SelectItem key={algo.name} value={algo.name}>
+                        {algo.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <p className="text-sm text-muted-foreground mb-2">
               아래에 `manageElevators` 함수를 JavaScript로 작성하여 붙여넣거나, 위 예시 중 하나를 선택하여 수정해보세요.
