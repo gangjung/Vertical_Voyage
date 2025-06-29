@@ -45,7 +45,6 @@ export interface Stats {
 
 // --- CONSTANTS ---
 const TICK_INTERVAL_MS = 1000;
-const NUM_ELEVATORS = 4;
 
 
 // --- HELPER FUNCTION: CORE ELEVATOR LOGIC ---
@@ -118,6 +117,7 @@ const processElevatorTick = (
 export function useElevatorSimulation(
   numFloors: number,
   elevatorCapacity: number,
+  numElevators: number,
   passengerManifest: PassengerManifest,
   customManageElevators?: (input: AlgorithmInput) => ElevatorCommand[]
 ): { state: SimulationState, stats: Stats } {
@@ -126,7 +126,7 @@ export function useElevatorSimulation(
     return {
       state: {
         currentTime: 0,
-        elevators: Array.from({ length: NUM_ELEVATORS }, (_, i) => ({
+        elevators: Array.from({ length: numElevators }, (_, i) => ({
           id: i + 1,
           floor: 0,
           direction: 'idle',
@@ -147,7 +147,7 @@ export function useElevatorSimulation(
         totalDistanceTraveled: 0,
       }
     }
-  }, [numFloors]);
+  }, [numFloors, numElevators]);
 
   const [simulation, setSimulation] = useState<{ state: SimulationState, stats: Stats }>(getInitialState());
 
@@ -156,7 +156,7 @@ export function useElevatorSimulation(
   // Effect to reset the simulation when the algorithm or parameters change
   useEffect(() => {
     setSimulation(getInitialState());
-  }, [customManageElevators, numFloors, elevatorCapacity, getInitialState, passengerManifest]);
+  }, [customManageElevators, numFloors, elevatorCapacity, numElevators, getInitialState, passengerManifest]);
 
 
   const tick = useCallback(() => {
@@ -196,13 +196,13 @@ export function useElevatorSimulation(
       let commands: ElevatorCommand[];
       try {
         commands = manageElevators(algorithmInput);
-        if (!Array.isArray(commands) || commands.length !== NUM_ELEVATORS) {
-            console.error(`Algorithm must return an array with ${NUM_ELEVATORS} commands. Reverting to idle.`);
-            commands = Array(NUM_ELEVATORS).fill('idle');
+        if (!Array.isArray(commands) || commands.length !== numElevators) {
+            console.error(`Algorithm must return an array with ${numElevators} commands. Reverting to idle.`);
+            commands = Array(numElevators).fill('idle');
         }
       } catch (e) {
           console.error("Error executing custom algorithm:", e);
-          commands = Array(NUM_ELEVATORS).fill('idle'); // Failsafe
+          commands = Array(numElevators).fill('idle'); // Failsafe
       }
       
       // 3. Process Elevators based on commands
@@ -273,7 +273,7 @@ export function useElevatorSimulation(
         }
       };
     });
-  }, [numFloors, elevatorCapacity, customManageElevators, defaultManageElevators, simulation.stats.totalOperatingTime, passengerManifest]);
+  }, [numFloors, elevatorCapacity, customManageElevators, defaultManageElevators, simulation.stats.totalOperatingTime, passengerManifest, numElevators]);
 
   useEffect(() => {
     if (simulationIntervalRef.current) {

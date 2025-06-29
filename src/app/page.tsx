@@ -20,7 +20,6 @@ import type { PassengerManifest } from '@/ai/passenger-scenarios';
 
 const NUM_FLOORS = 10;
 const ELEVATOR_CAPACITY = 8;
-const NUM_ELEVATORS = 4;
 
 const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
   <>
@@ -35,10 +34,12 @@ export default function VerticalVoyagePage() {
   const [code, setCode] = useState(exampleAlgorithms[0].code);
   const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(null);
   const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
+  const [numElevators, setNumElevators] = useState(4);
 
   const { state: simulation, stats } = useElevatorSimulation(
     NUM_FLOORS, 
     ELEVATOR_CAPACITY,
+    numElevators,
     passengerManifest,
     customAlgorithm || undefined
   );
@@ -47,6 +48,7 @@ export default function VerticalVoyagePage() {
     setIsClient(true);
     // Apply the default algorithm on initial load
     handleApplyCode(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   const handleApplyCode = (isInitialLoad = false) => {
@@ -69,7 +71,7 @@ export default function VerticalVoyagePage() {
       `);
 
       // Test the function with a dummy input to catch basic errors
-      const testElevators = Array.from({ length: NUM_ELEVATORS }, (_, i) => ({
+      const testElevators = Array.from({ length: numElevators }, (_, i) => ({
         id: i + 1,
         floor: 0,
         direction: 'idle',
@@ -77,8 +79,8 @@ export default function VerticalVoyagePage() {
         distanceTraveled: 0
       }));
       const testResult = newAlgorithm({ currentTime: 0, elevators: testElevators, waitingPassengers: Array.from({ length: NUM_FLOORS }, () => []), numFloors: NUM_FLOORS, elevatorCapacity: ELEVATOR_CAPACITY});
-      if (!Array.isArray(testResult) || testResult.length !== NUM_ELEVATORS) {
-         throw new Error(`함수는 ${NUM_ELEVATORS}대의 엘리베이터에 대한 명령어 배열을 반환해야 합니다.`);
+      if (!Array.isArray(testResult) || testResult.length !== numElevators) {
+         throw new Error(`함수는 ${numElevators}대의 엘리베이터에 대한 명령어 배열을 반환해야 합니다.`);
       }
       
       // Set the new function for the simulation hook to use.
@@ -179,7 +181,7 @@ export default function VerticalVoyagePage() {
          <CardHeader className="pb-2 pt-3">
            <CardTitle className="text-lg font-headline flex items-center gap-2"><Milestone /> Algorithm Performance</CardTitle>
          </CardHeader>
-         <CardContent className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm border-t">
+         <CardContent className="p-3 pt-2 grid grid-cols-2 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm border-t">
            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Timer className="w-4 h-4" />
@@ -248,7 +250,7 @@ export default function VerticalVoyagePage() {
            </div>
          </CardHeader>
           <CardContent className="p-3 border-t">
-            <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="scenario-select" className="mb-2 block text-sm font-medium"><UsersRound className="inline-block w-4 h-4 mr-1"/>승객 시나리오 선택</Label>
                 <Select
@@ -295,6 +297,23 @@ export default function VerticalVoyagePage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="elevator-count-select" className="mb-2 block text-sm font-medium"><Building className="inline-block w-4 h-4 mr-1"/>엘리베이터 수 선택</Label>
+                <Select
+                  value={String(numElevators)}
+                  onValueChange={(value) => {
+                    setNumElevators(Number(value));
+                  }}
+                >
+                  <SelectTrigger id="elevator-count-select" className="w-full">
+                    <SelectValue placeholder="엘리베이터 수를 선택하세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2">2대</SelectItem>
+                    <SelectItem value="4">4대</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="text-sm text-muted-foreground mb-3 space-y-2">
               <p>
@@ -322,7 +341,7 @@ export default function VerticalVoyagePage() {
                <div>
                   <h4 className="font-medium text-foreground">반환값:</h4>
                   <p className="text-xs mt-1">
-                      엘리베이터 {NUM_ELEVATORS}대에 대한 명령이 담긴 배열을 반환해야 합니다. 각 명령은 <code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, 또는 <code className="p-0.5 rounded bg-muted">'idle'</code> 중 하나여야 합니다. (예: <code className="p-0.5 rounded bg-muted">['up', 'down', 'idle', 'up']</code>)
+                      엘리베이터 {numElevators}대에 대한 명령이 담긴 배열을 반환해야 합니다. 각 명령은 <code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, 또는 <code className="p-0.5 rounded bg-muted">'idle'</code> 중 하나여야 합니다. (예: <code className="p-0.5 rounded bg-muted">['up', 'down', 'idle', 'up']</code>)
                   </p>
               </div>
             </div>
