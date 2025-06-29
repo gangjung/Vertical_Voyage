@@ -35,6 +35,12 @@ export interface Stats {
   totalPassengersServed: number;
   totalWaitTime: number;
   averageWaitTime: number;
+  totalTravelTime: number;
+  averageTravelTime: number;
+  totalJourneyTime: number;
+  averageJourneyTime: number;
+  totalOperatingTime: number;
+  totalDistanceTraveled: number;
 }
 
 
@@ -127,6 +133,12 @@ export function useElevatorSimulation(
         totalPassengersServed: 0,
         totalWaitTime: 0,
         averageWaitTime: 0,
+        totalTravelTime: 0,
+        averageTravelTime: 0,
+        totalJourneyTime: 0,
+        averageJourneyTime: 0,
+        totalOperatingTime: 0,
+        totalDistanceTraveled: 0,
       }
     }
   }, [numFloors]);
@@ -142,19 +154,26 @@ export function useElevatorSimulation(
 
 
   const tick = useCallback(() => {
+    // Stop the simulation if it's finished
+    if (simulation.stats.totalOperatingTime > 0) {
+        if (simulationIntervalRef.current) {
+            clearInterval(simulationIntervalRef.current);
+        }
+        return;
+    }
+
     setSimulation(prevSimulation => {
       const prevState = prevSimulation.state;
       const prevStats = prevSimulation.stats;
-      const currentTime = prevState.currentTime;
+      const currentTime = prevState.currentTime + 1;
       const manageElevators = customManageElevators || defaultManageElevators;
 
-      // 1. Passenger Generation from Manifest (for fair competition)
+      // 1. Passenger Generation from Manifest
       let newWaitingPassengers = prevState.waitingPassengers.map(fp => [...fp]);
       const passengersToSpawn = PASSENGER_MANIFEST.filter(p => p.spawnTime === currentTime);
 
       if (passengersToSpawn.length > 0) {
         for (const person of passengersToSpawn) {
-          // The manifest contains the full Person object structure (minus optional fields)
           newWaitingPassengers[person.originFloor].push(person);
         }
       }
@@ -191,24 +210,42 @@ export function useElevatorSimulation(
 
       // 4. Update Stats for dropped off passengers
       const allDroppedOff = [...droppedE1, ...droppedE2];
-      let newTotalPassengersServed = prevStats.totalPassengersServed;
-      let newTotalWaitTime = prevStats.totalWaitTime;
+      let { 
+        totalPassengersServed: newTotalPassengersServed,
+        totalWaitTime: newTotalWaitTime,
+        totalTravelTime: newTotalTravelTime,
+        totalJourneyTime: newTotalJourneyTime,
+        totalOperatingTime: newTotalOperatingTime
+      } = prevStats;
 
       if (allDroppedOff.length > 0) {
         newTotalPassengersServed += allDroppedOff.length;
         for (const p of allDroppedOff) {
-          const waitTime = (p.pickupTime ?? p.spawnTime) - p.spawnTime;
+          const waitTime = (p.pickupTime ?? currentTime) - p.spawnTime;
+          const travelTime = currentTime - (p.pickupTime ?? currentTime);
+          const journeyTime = currentTime - p.spawnTime;
           newTotalWaitTime += waitTime;
+          newTotalTravelTime += travelTime;
+          newTotalJourneyTime += journeyTime;
         }
       }
       
       const newAverageWaitTime = newTotalPassengersServed > 0 ? newTotalWaitTime / newTotalPassengersServed : 0;
+      const newAverageTravelTime = newTotalPassengersServed > 0 ? newTotalTravelTime / newTotalPassengersServed : 0;
+      const newAverageJourneyTime = newTotalPassengersServed > 0 ? newTotalJourneyTime / newTotalPassengersServed : 0;
+
+      // Check if the simulation is complete
+      if (newTotalPassengersServed === PASSENGER_MANIFEST.length && newTotalOperatingTime === 0) {
+          newTotalOperatingTime = currentTime;
+      }
+      
+      const newTotalDistanceTraveled = elevator1.distanceTraveled + elevator2.distanceTraveled;
 
 
       // 5. Return new state and stats
       return {
         state: {
-          currentTime: currentTime + 1,
+          currentTime: currentTime,
           elevator1,
           elevator2,
           waitingPassengers: waitingAfterE2,
@@ -217,10 +254,16 @@ export function useElevatorSimulation(
           totalPassengersServed: newTotalPassengersServed,
           totalWaitTime: newTotalWaitTime,
           averageWaitTime: newAverageWaitTime,
+          totalTravelTime: newTotalTravelTime,
+          averageTravelTime: newAverageTravelTime,
+          totalJourneyTime: newTotalJourneyTime,
+          averageJourneyTime: newAverageJourneyTime,
+          totalOperatingTime: newTotalOperatingTime,
+          totalDistanceTraveled: newTotalDistanceTraveled
         }
       };
     });
-  }, [numFloors, elevatorCapacity, customManageElevators, defaultManageElevators]);
+  }, [numFloors, elevatorCapacity, customManageElevators, defaultManageElevators, simulation.stats.totalOperatingTime]);
 
   useEffect(() => {
     if (simulationIntervalRef.current) {

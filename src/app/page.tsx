@@ -10,10 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { Users, Footprints, Code, Play } from 'lucide-react';
+import { Users, Footprints, Code, Play, Trophy, Clock, Route, Milestone } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exampleAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
+import { PASSENGER_MANIFEST } from '@/ai/passenger-manifest';
 
 const NUM_FLOORS = 10;
 const ELEVATOR_CAPACITY = 4;
@@ -39,15 +40,19 @@ export default function VerticalVoyagePage() {
   
   useEffect(() => {
     setIsClient(true);
+    // Apply the default algorithm on initial load
+    handleApplyCode(true);
   }, []);
-
-  const handleApplyCode = () => {
+  
+  const handleApplyCode = (isInitialLoad = false) => {
     if (!code.trim()) {
       toast({ variant: "destructive", title: "코드가 비어있습니다", description: "알고리즘 코드를 입력해주세요." });
       return;
     }
 
     try {
+      // This is a safer way to create a function from a string.
+      // We explicitly pass the arguments it can access.
       const newAlgorithm = new Function('input', `
         ${code}
         
@@ -58,17 +63,22 @@ export default function VerticalVoyagePage() {
         return manageElevators(input);
       `);
 
+      // Test the function with a dummy input to catch basic errors
       const testResult = newAlgorithm({ currentTime: 0, elevators: [{id: 1, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0}, {id: 2, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0}], waitingPassengers: Array.from({ length: NUM_FLOORS }, () => []), numFloors: NUM_FLOORS, elevatorCapacity: ELEVATOR_CAPACITY});
       if (!Array.isArray(testResult) || testResult.length !== 2) {
          throw new Error('함수는 2대의 엘리베이터에 대한 명령어 배열을 반환해야 합니다.');
       }
       
+      // Set the new function for the simulation hook to use.
+      // The `() => newAlgorithm` is important to prevent React from trying to execute the function.
       setCustomAlgorithm(() => newAlgorithm as any);
 
-      toast({
-        title: "성공!",
-        description: "새로운 알고리즘이 적용되었습니다. 시뮬레이션이 재시작됩니다.",
-      });
+      if (!isInitialLoad) {
+        toast({
+          title: "성공!",
+          description: "새로운 알고리즘이 적용되었습니다. 시뮬레이션이 재시작됩니다.",
+        });
+      }
     } catch (e) {
       console.error("Algorithm Error:", e);
       setCustomAlgorithm(null); // Revert to default
@@ -116,17 +126,55 @@ export default function VerticalVoyagePage() {
         </CardContent>
       </Card>
 
+      {stats.totalOperatingTime > 0 && (
+        <Card className="mt-4 w-full max-w-2xl lg:max-w-4xl shadow-lg border-2 border-accent animate-fadeIn">
+          <CardHeader className="pb-2 pt-3">
+            <CardTitle className="text-lg font-headline flex items-center gap-2 text-accent">
+              <Trophy className="w-5 h-5" />
+              Final Score & Ranking
+            </CardTitle>
+            <CardDescription>This is the final result for the current algorithm.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-3 gap-y-2 gap-x-4 text-sm border-t">
+            <div className="flex flex-col items-center p-2 rounded-lg bg-secondary/50">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="w-4 h-4" />
+                <span>Total Operating Time</span>
+              </div>
+              <span className="font-bold text-2xl text-primary mt-1">{stats.totalOperatingTime} steps</span>
+              <span className="text-xs text-muted-foreground">(1st Priority)</span>
+            </div>
+            <div className="flex flex-col items-center p-2 rounded-lg">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Footprints className="w-4 h-4" />
+                <span>Avg. Journey Steps</span>
+              </div>
+              <span className="font-bold text-2xl mt-1">{stats.averageJourneyTime.toFixed(1)}</span>
+              <span className="text-xs text-muted-foreground">(2nd Priority)</span>
+            </div>
+            <div className="flex flex-col items-center p-2 rounded-lg">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Route className="w-4 h-4" />
+                <span>Total Distance</span>
+              </div>
+              <span className="font-bold text-2xl mt-1">{stats.totalDistanceTraveled}</span>
+              <span className="text-xs text-muted-foreground">(3rd Priority)</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
        <Card className="mt-4 w-full max-w-2xl lg:max-w-4xl shadow-lg">
          <CardHeader className="pb-2 pt-3">
-           <CardTitle className="text-lg font-headline">Algorithm Performance</CardTitle>
+           <CardTitle className="text-lg font-headline flex items-center gap-2"><Milestone /> Algorithm Performance</CardTitle>
          </CardHeader>
-         <CardContent className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm border-t">
+         <CardContent className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-3 gap-y-2 gap-x-4 text-sm border-t">
            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Users className="w-4 h-4" />
-                <span>Total Passengers Served</span>
+                <span>Passengers Served</span>
               </div>
-              <span className="font-bold text-base">{stats.totalPassengersServed}</span>
+              <span className="font-bold text-base">{stats.totalPassengersServed} / {PASSENGER_MANIFEST.length}</span>
             </div>
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-muted-foreground">
@@ -134,6 +182,13 @@ export default function VerticalVoyagePage() {
                 <span>Average Wait Steps</span>
                </div>
               <span className="font-bold text-base">{stats.averageWaitTime.toFixed(1)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2 text-muted-foreground">
+                <Route className="w-4 h-4" />
+                <span>Average Travel Steps</span>
+               </div>
+              <span className="font-bold text-base">{stats.averageTravelTime.toFixed(1)}</span>
             </div>
          </CardContent>
        </Card>
@@ -180,7 +235,7 @@ export default function VerticalVoyagePage() {
             />
           </CardContent>
           <CardFooter>
-            <Button onClick={handleApplyCode} className="w-full sm:w-auto">
+            <Button onClick={() => handleApplyCode(false)} className="w-full sm:w-auto">
               <Play className="mr-2 h-4 w-4" />
               Apply and Restart Simulation
             </Button>
