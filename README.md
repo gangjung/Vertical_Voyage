@@ -1,5 +1,32 @@
-# Firebase Studio
+# Vertical Voyage - 엘리베이터 시뮬레이션
 
-This is a NextJS starter in Firebase Studio.
+'Vertical Voyage'는 Next.js와 React를 기반으로 구축된 동적인 엘리베이터 시뮬레이션 애플리케이션입니다. 이 프로젝트는 엘리베이터 알고리즘의 기본 로직을 시각적으로 구현하고, 사용자가 그 과정을 실시간으로 관찰할 수 있도록 합니다.
 
-To get started, take a look at src/app/page.tsx.
+## ✨ 핵심 기능
+
+-   **빌딩 시각화**: 엘리베이터와 여러 층으로 구성된 건물의 단면을 시각적으로 보여줍니다.
+-   **동적 승객 생성**: 각 층에서 승객(사람)들이 무작위로 생성되어 엘리베이터를 기다립니다.
+-   **엘리베이터 시뮬레이션**:
+    -   엘리베이터가 자동으로 위아래로 움직입니다.
+    -   각 층에서 대기 중인 승객을 태웁니다.
+    -   목적지 층에 승객을 내려줍니다.
+-   **실시간 상태 로그**: 현재 시간, 엘리베이터의 위치, 방향, 탑승객 정보, 대기 승객 현황을 실시간으로 표시하여 시뮬레이션의 모든 과정을 추적할 수 있습니다.
+
+## 🛠️ 기술 스택
+
+-   **프레임워크**: Next.js (App Router), React
+-   **언어**: TypeScript
+-   **스타일링**: Tailwind CSS, ShadCN UI Components
+-   **상태 관리**: React Hooks (`useState`, `useEffect`, `useCallback`)
+-   **AI**: Genkit (향후 AI 기능 확장을 위해 준비됨)
+
+## 📂 프로젝트 구조
+
+-   `src/app/page.tsx`: 애플리케이션의 메인 페이지로, 시뮬레이션의 전체 레이아웃을 구성합니다.
+-   `src/hooks/useElevatorSimulation.ts`: 엘리베이터의 모든 로직(이동, 승객 탑승/하차, 승객 생성 등)을 관리하는 핵심 훅(Hook)입니다.
+-   `src/components/vertical-voyage/`: 엘리베이터, 층, 사람 아이콘 등 시뮬레이션을 구성하는 모든 시각적 컴포넌트가 모여있습니다.
+-   `src/app/globals.css`: 앱의 전체적인 색상 테마(인디고, 오렌지)와 스타일을 정의합니다.
+
+---
+
+이 프로젝트를 기반으로 기능을 더 추가하거나 수정하고 싶으시다면, 언제든지 요청해주세요! 예를 들어, "엘리베이터 이동 속도를 조절하는 슬라이더를 추가해줘" 와 같이 말씀해주시면 됩니다.
