@@ -38,6 +38,30 @@ export function manageElevators(input: AlgorithmInput): ElevatorCommand[] {
   // ===== 여기에 자신만의 엘리베이터 알고리즘을 구현하세요! =====
   // =================================================================
 
+  /*
+   * `input` 객체에는 시뮬레이션의 현재 상태 정보가 담겨 있습니다.
+   * 이 정보를 활용하여 각 엘리베이터의 다음 행동을 결정하세요.
+   * 
+   * - input.currentTime: 현재 시뮬레이션 스텝(시간)입니다. (number)
+   * 
+   * - input.elevators: 건물에 있는 모든 엘리베이터의 상태 배열입니다. (ElevatorState[])
+   *   - elevator.id: 엘리베이터의 고유 번호 (1, 2, ...)
+   *   - elevator.floor: 현재 엘리베이터가 위치한 층 (0부터 시작)
+   *   - elevator.direction: 현재 엘리베이터의 이동 방향 ('up', 'down', 'idle')
+   *   - elevator.passengers: 엘리베이터에 탑승 중인 승객 목록 (Person[])
+   *     - person.id: 승객의 고유 번호
+   *     - person.originFloor: 승객이 탑승한 층
+   *     - person.destinationFloor: 승객의 목적지 층
+   *   - elevator.distanceTraveled: 엘리베이터가 이동한 총 거리 (층 수 기준)
+   * 
+   * - input.waitingPassengers: 각 층에서 엘리베이터를 기다리는 승객들의 목록입니다. (Person[][])
+   *   - waitingPassengers[i]는 i층에서 대기 중인 승객들의 배열을 의미합니다.
+   * 
+   * - input.numFloors: 건물의 총 층 수입니다. (number)
+   * 
+   * - input.elevatorCapacity: 엘리베이터 한 대의 최대 수용 인원입니다. (number)
+   */
+
   const { elevators, waitingPassengers, numFloors } = input;
   
   const commands = elevators.map(elevator => {
