@@ -288,12 +288,36 @@ export default function VerticalVoyagePage() {
                 </Select>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mb-2">
-              아래에 `manageElevators` 함수를 JavaScript로 작성하여 붙여넣거나, 위 예시 중 하나를 선택하여 수정해보세요. 
-              함수에 전달되는 데이터 구조와 반환값에 대한 자세한 설명은 
-              <code className="mx-1 p-1 rounded bg-muted text-muted-foreground/80 text-xs">src/ai/elevator-algorithm.ts</code>
-              파일의 주석을 참고하세요.
-            </p>
+            <div className="text-sm text-muted-foreground mb-3 space-y-2">
+              <p>
+                  아래 텍스트 영역에 `manageElevators` 함수를 JavaScript로 작성하세요. 
+                  이 함수는 시뮬레이션의 매 스텝마다 호출되며, 각 엘리베이터가 다음에 어떤 행동을 할지 결정해야 합니다.
+              </p>
+              <div>
+                  <h4 className="font-medium text-foreground">`input` 객체 속성:</h4>
+                  <ul className="list-disc list-inside pl-2 text-xs space-y-1 mt-1">
+                      <li><code className="p-0.5 rounded bg-muted">currentTime</code>: 현재 스텝(시간).</li>
+                      <li><code className="p-0.5 rounded bg-muted">numFloors</code>: 건물의 총 층 수.</li>
+                      <li><code className="p-0.5 rounded bg-muted">elevatorCapacity</code>: 엘리베이터 최대 용량.</li>
+                      <li>
+                          <code className="p-0.5 rounded bg-muted">elevators</code>: 엘리베이터 객체 배열. 각 객체는 다음을 포함:
+                          <ul className="list-['-_'] list-inside pl-4 mt-1">
+                              <li><code className="p-0.5 rounded bg-muted">floor</code>: 현재 층 (0부터 시작)</li>
+                              <li><code className="p-0.5 rounded bg-muted">direction</code>: 현재 방향 ('up', 'down', 'idle')</li>
+                              <li><code className="p-0.5 rounded bg-muted">passengers</code>: 탑승 중인 승객 배열 (각 승객은 <code className="p-0.5 rounded bg-muted">destinationFloor</code> 속성을 가짐)</li>
+                              <li><code className="p-0.5 rounded bg-muted">distanceTraveled</code>: 총 이동 거리</li>
+                          </ul>
+                      </li>
+                      <li><code className="p-0.5 rounded bg-muted">waitingPassengers</code>: 각 층에서 대기 중인 승객의 2차원 배열. <code className="p-0.5 rounded bg-muted">waitingPassengers[i]</code>는 i층의 대기 승객 목록입니다.</li>
+                  </ul>
+              </div>
+               <div>
+                  <h4 className="font-medium text-foreground">반환값:</h4>
+                  <p className="text-xs mt-1">
+                      엘리베이터 2대에 대한 명령이 담긴 배열을 반환해야 합니다. 각 명령은 <code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, 또는 <code className="p-0.5 rounded bg-muted">'idle'</code> 중 하나여야 합니다. (예: <code className="p-0.5 rounded bg-muted">['up', 'down']</code>)
+                  </p>
+              </div>
+            </div>
             <Textarea
               value={code}
               onChange={(e) => setCode(e.target.value)}
