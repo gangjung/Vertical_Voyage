@@ -134,7 +134,7 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
       // 1. Passenger Generation
       let newWaitingPassengers = prevState.waitingPassengers.map(fp => [...fp]);
       for (let floorIdx = 0; floorIdx < numFloors; floorIdx++) {
-        if (newWaitingPassengers[floorIdx].length < MAX_PASSENGERS_PER_FLOOR_waiting && Math.random() < PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR) {
+        if (newWaitingPassengers[floorIdx].length < MAX_PASSENGERS_PER_FLOOR_WAITING && Math.random() < PASSENGER_SPAWN_PROBABILITY_PER_TICK_PER_FLOOR) {
           let destinationFloor;
           do {
             destinationFloor = Math.floor(Math.random() * numFloors);
