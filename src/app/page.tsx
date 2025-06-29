@@ -3,10 +3,11 @@
 
 import { BuildingLayout } from '@/components/vertical-voyage/BuildingLayout';
 import { useElevatorSimulation } from '@/hooks/useElevatorSimulation';
-import type { ElevatorState, Person } from '@/hooks/useElevatorSimulation';
+import type { ElevatorState } from '@/hooks/useElevatorSimulation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect } from 'react';
+import { Users, Clock } from 'lucide-react';
 
 const NUM_FLOORS = 10;
 const ELEVATOR_CAPACITY = 4;
@@ -19,7 +20,7 @@ const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
 );
 
 export default function VerticalVoyagePage() {
-  const simulation = useElevatorSimulation(NUM_FLOORS, ELEVATOR_CAPACITY);
+  const { state: simulation, stats } = useElevatorSimulation(NUM_FLOORS, ELEVATOR_CAPACITY);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -60,6 +61,28 @@ export default function VerticalVoyagePage() {
           />
         </CardContent>
       </Card>
+
+       <Card className="mt-4 w-full max-w-2xl lg:max-w-4xl shadow-lg">
+         <CardHeader className="pb-2 pt-3">
+           <CardTitle className="text-lg font-headline">Algorithm Performance</CardTitle>
+         </CardHeader>
+         <CardContent className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm border-t">
+           <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Users className="w-4 h-4" />
+                <span>Total Passengers Served</span>
+              </div>
+              <span className="font-bold text-base">{stats.totalPassengersServed}</span>
+            </div>
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="w-4 h-4" />
+                <span>Average Wait Time</span>
+               </div>
+              <span className="font-bold text-base">{stats.averageWaitTime.toFixed(1)}s</span>
+            </div>
+         </CardContent>
+       </Card>
       
        <Card className="mt-4 w-full max-w-2xl lg:max-w-4xl shadow-lg">
          <CardHeader className="pb-2 pt-3">

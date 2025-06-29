@@ -9,6 +9,7 @@ export interface Person {
   id: number;
   originFloor: number;
   destinationFloor: number;
+  spawnTime: number;
 }
 
 export interface ElevatorState {
@@ -26,6 +27,12 @@ export interface SimulationState {
   waitingPassengers: Person[][];
 }
 
+export interface Stats {
+  totalPassengersServed: number;
+  totalWaitTime: number;
+  averageWaitTime: number;
+}
+
 
 // --- CONSTANTS ---
 const TICK_INTERVAL_MS = 1000;
@@ -41,12 +48,15 @@ const processElevatorTick = (
   numFloors: number,
   elevatorCapacity: number,
   command: ElevatorCommand
-): { updatedElevator: ElevatorState; updatedWaiting: Person[][] } => {
+): { updatedElevator: ElevatorState; updatedWaiting: Person[][]; droppedOffPassengers: Person[] } => {
   let newElevator = { ...elevator, passengers: [...elevator.passengers] };
   let newWaiting = waitingPassengers.map(f => [...f]);
   const initialFloor = newElevator.floor;
 
   // 1. Drop off passengers at the current floor
+  const droppedOffPassengers = newElevator.passengers.filter(
+    p => p.destinationFloor === newElevator.floor
+  );
   newElevator.passengers = newElevator.passengers.filter(
     p => p.destinationFloor !== newElevator.floor
   );
@@ -60,10 +70,6 @@ const processElevatorTick = (
       const wantsToGoUp = person.destinationFloor > newElevator.floor;
       const wantsToGoDown = person.destinationFloor < newElevator.floor;
 
-      // Pick up conditions:
-      // - The elevator is empty, it can take anyone.
-      // - The elevator is commanded to go UP, and the person wants to go UP.
-      // - The elevator is commanded to go DOWN, and the person wants to go DOWN.
       if (
         newElevator.passengers.length === 0 ||
         (command === 'up' && wantsToGoUp) ||
@@ -88,30 +94,40 @@ const processElevatorTick = (
   } else if (newElevator.direction === 'down' && newElevator.floor > 0) {
     newElevator.floor--;
   }
-  // If direction is 'idle', it doesn't move.
 
   // 5. Update distance traveled if floor changed
   if(newElevator.floor !== initialFloor) {
     newElevator.distanceTraveled++;
   }
 
-  return { updatedElevator: newElevator, updatedWaiting: newWaiting };
+  return { updatedElevator: newElevator, updatedWaiting: newWaiting, droppedOffPassengers };
 };
 
 
 // --- MAIN HOOK ---
-export function useElevatorSimulation(numFloors: number, elevatorCapacity: number): SimulationState {
-  const [state, setState] = useState<SimulationState>({
-    currentTime: 0,
-    elevator1: { id: 1, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
-    elevator2: { id: 2, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
-    waitingPassengers: Array.from({ length: numFloors }, () => []),
+export function useElevatorSimulation(numFloors: number, elevatorCapacity: number): { state: SimulationState, stats: Stats } {
+  const [simulation, setSimulation] = useState<{ state: SimulationState, stats: Stats }>({
+    state: {
+      currentTime: 0,
+      elevator1: { id: 1, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
+      elevator2: { id: 2, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
+      waitingPassengers: Array.from({ length: numFloors }, () => []),
+    },
+    stats: {
+      totalPassengersServed: 0,
+      totalWaitTime: 0,
+      averageWaitTime: 0,
+    }
   });
 
   const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const tick = useCallback(() => {
-    setState(prevState => {
+    setSimulation(prevSimulation => {
+      const prevState = prevSimulation.state;
+      const prevStats = prevSimulation.stats;
+      const currentTime = prevState.currentTime;
+
       // 1. Passenger Generation
       let newWaitingPassengers = prevState.waitingPassengers.map(fp => [...fp]);
       for (let floorIdx = 0; floorIdx < numFloors; floorIdx++) {
@@ -125,13 +141,14 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
             id: nextPersonId++,
             originFloor: floorIdx,
             destinationFloor: destinationFloor,
+            spawnTime: currentTime,
           });
         }
       }
 
       // 2. Call the user-defined algorithm to get commands
       const algorithmInput: AlgorithmInput = {
-        currentTime: prevState.currentTime,
+        currentTime: currentTime,
         elevators: [prevState.elevator1, prevState.elevator2],
         waitingPassengers: newWaitingPassengers,
         numFloors: numFloors,
@@ -142,21 +159,41 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
 
 
       // 3. Process Elevators based on commands
-      // Note: We process them sequentially. The waiting list is updated after each elevator.
-      // This means the second elevator has slightly more up-to-date info on waiting passengers.
-      const { updatedElevator: elevator1, updatedWaiting: waitingAfterE1 } =
+      const { updatedElevator: elevator1, updatedWaiting: waitingAfterE1, droppedOffPassengers: droppedE1 } =
         processElevatorTick(prevState.elevator1, newWaitingPassengers, numFloors, elevatorCapacity, command1);
 
-      const { updatedElevator: elevator2, updatedWaiting: waitingAfterE2 } =
+      const { updatedElevator: elevator2, updatedWaiting: waitingAfterE2, droppedOffPassengers: droppedE2 } =
         processElevatorTick(prevState.elevator2, waitingAfterE1, numFloors, elevatorCapacity, command2);
 
+      // 4. Update Stats for dropped off passengers
+      const allDroppedOff = [...droppedE1, ...droppedE2];
+      let newTotalPassengersServed = prevStats.totalPassengersServed;
+      let newTotalWaitTime = prevStats.totalWaitTime;
 
-      // 4. Return new state
+      if (allDroppedOff.length > 0) {
+        newTotalPassengersServed += allDroppedOff.length;
+        for (const p of allDroppedOff) {
+          const waitTime = currentTime - p.spawnTime;
+          newTotalWaitTime += waitTime;
+        }
+      }
+      
+      const newAverageWaitTime = newTotalPassengersServed > 0 ? newTotalWaitTime / newTotalPassengersServed : 0;
+
+
+      // 5. Return new state and stats
       return {
-        currentTime: prevState.currentTime + 1,
-        elevator1,
-        elevator2,
-        waitingPassengers: waitingAfterE2,
+        state: {
+          currentTime: currentTime + 1,
+          elevator1,
+          elevator2,
+          waitingPassengers: waitingAfterE2,
+        },
+        stats: {
+          totalPassengersServed: newTotalPassengersServed,
+          totalWaitTime: newTotalWaitTime,
+          averageWaitTime: newAverageWaitTime,
+        }
       };
     });
   }, [numFloors, elevatorCapacity]);
@@ -170,5 +207,5 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
     };
   }, [tick]);
 
-  return state;
+  return simulation;
 }
