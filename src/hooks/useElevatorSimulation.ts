@@ -16,6 +16,7 @@ export interface ElevatorState {
   floor: number;
   direction: 'up' | 'down' | 'idle';
   passengers: Person[];
+  distanceTraveled: number;
 }
 
 export interface SimulationState {
@@ -43,6 +44,7 @@ const processElevatorTick = (
 ): { updatedElevator: ElevatorState; updatedWaiting: Person[][] } => {
   let newElevator = { ...elevator, passengers: [...elevator.passengers] };
   let newWaiting = waitingPassengers.map(f => [...f]);
+  const initialFloor = newElevator.floor;
 
   // 1. Drop off passengers at the current floor
   newElevator.passengers = newElevator.passengers.filter(
@@ -88,6 +90,11 @@ const processElevatorTick = (
   }
   // If direction is 'idle', it doesn't move.
 
+  // 5. Update distance traveled if floor changed
+  if(newElevator.floor !== initialFloor) {
+    newElevator.distanceTraveled++;
+  }
+
   return { updatedElevator: newElevator, updatedWaiting: newWaiting };
 };
 
@@ -96,8 +103,8 @@ const processElevatorTick = (
 export function useElevatorSimulation(numFloors: number, elevatorCapacity: number): SimulationState {
   const [state, setState] = useState<SimulationState>({
     currentTime: 0,
-    elevator1: { id: 1, floor: 0, direction: 'idle', passengers: [] },
-    elevator2: { id: 2, floor: 0, direction: 'idle', passengers: [] },
+    elevator1: { id: 1, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
+    elevator2: { id: 2, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 },
     waitingPassengers: Array.from({ length: numFloors }, () => []),
   });
 
