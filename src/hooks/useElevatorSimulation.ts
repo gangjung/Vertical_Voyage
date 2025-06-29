@@ -112,7 +112,7 @@ export function useElevatorSimulation(numFloors: number, elevatorCapacity: numbe
   const [state, setState] = useState<SimulationState>({
     currentTime: 0,
     elevator1: { id: 1, floor: 0, direction: 'up', passengers: [] },
-    elevator2: { id: 2, floor: numFloors -1, direction: 'down', passengers: [] },
+    elevator2: { id: 2, floor: 0, direction: 'up', passengers: [] },
     waitingPassengers: Array.from({ length: numFloors }, () => []),
   });
 
