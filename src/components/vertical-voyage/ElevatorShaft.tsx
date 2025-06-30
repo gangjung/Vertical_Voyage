@@ -20,6 +20,7 @@ export function ElevatorShaft({ numFloors, elevator }: ElevatorShaftProps) {
           height: `${floorHeightPercentage}%`,
           bottom: `${elevatorBottomPercentage}%`,
         }}
+        floor={elevator.floor}
         passengers={elevator.passengers}
         direction={elevator.direction}
         distanceTraveled={elevator.distanceTraveled}
