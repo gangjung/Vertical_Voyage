@@ -25,6 +25,7 @@ export function BuildingLayout({ numFloors, elevators, waitingPassengers }: Buil
           key={elevator.id}
           numFloors={numFloors}
           elevator={elevator}
+          waitingPassengers={waitingPassengers}
         />
       ))}
 
@@ -41,6 +42,7 @@ export function BuildingLayout({ numFloors, elevators, waitingPassengers }: Buil
           key={elevator.id}
           numFloors={numFloors}
           elevator={elevator}
+          waitingPassengers={waitingPassengers}
         />
       ))}
     </div>

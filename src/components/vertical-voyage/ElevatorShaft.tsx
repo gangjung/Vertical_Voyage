@@ -5,9 +5,10 @@ import { ElevatorCar } from './ElevatorCar';
 interface ElevatorShaftProps {
   numFloors: number;
   elevator: ElevatorState;
+  waitingPassengers: Person[][];
 }
 
-export function ElevatorShaft({ numFloors, elevator }: ElevatorShaftProps) {
+export function ElevatorShaft({ numFloors, elevator, waitingPassengers }: ElevatorShaftProps) {
   const floorHeightPercentage = 100 / numFloors;
   
   // Elevator car's bottom position based on current floor
@@ -24,6 +25,8 @@ export function ElevatorShaft({ numFloors, elevator }: ElevatorShaftProps) {
         passengers={elevator.passengers}
         direction={elevator.direction}
         distanceTraveled={elevator.distanceTraveled}
+        waitingPassengers={waitingPassengers}
+        numFloors={numFloors}
       />
     </div>
   );

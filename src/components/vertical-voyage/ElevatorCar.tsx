@@ -1,7 +1,7 @@
 // components/vertical-voyage/ElevatorCar.tsx
 import type { Person } from '@/hooks/useElevatorSimulation';
 import { PersonIcon } from './PersonIcon';
-import { ArrowUp, ArrowDown, MinusSquare, Pin, Target } from 'lucide-react'; // MinusSquare for idle
+import { ArrowUp, ArrowDown, MinusSquare, Pin } from 'lucide-react'; // MinusSquare for idle
 import { cn } from '@/lib/utils';
 
 interface ElevatorCarProps {
@@ -10,19 +10,54 @@ interface ElevatorCarProps {
   direction: 'up' | 'down' | 'idle';
   distanceTraveled: number;
   floor: number;
+  waitingPassengers: Person[][];
+  numFloors: number;
 }
 
-export function ElevatorCar({ style, passengers, direction, distanceTraveled, floor }: ElevatorCarProps) {
+export function ElevatorCar({ style, passengers, direction, distanceTraveled, floor, waitingPassengers, numFloors }: ElevatorCarProps) {
   const DirectionIcon = direction === 'up' ? ArrowUp : direction === 'down' ? ArrowDown : MinusSquare;
   
-  let targetFloor: number | null = null;
-  if (passengers.length > 0) {
-    if (direction === 'up') {
-        targetFloor = Math.max(...passengers.map(p => p.destinationFloor));
-    } else if (direction === 'down') {
-        targetFloor = Math.min(...passengers.map(p => p.destinationFloor));
+  const getTargetFloor = (): number | null => {
+    // 1. Priority: Passengers inside. Target the nearest stop in the current direction.
+    if (passengers.length > 0) {
+      if (direction === 'up') {
+        const upwardDestinations = passengers.filter(p => p.destinationFloor > floor);
+        if (upwardDestinations.length > 0) return Math.min(...upwardDestinations.map(p => p.destinationFloor));
+      }
+      if (direction === 'down') {
+        const downwardDestinations = passengers.filter(p => p.destinationFloor < floor);
+        if (downwardDestinations.length > 0) return Math.max(...downwardDestinations.map(p => p.destinationFloor));
+      }
+      // If no one is going in the current direction or if idle, find the closest destination of any passenger.
+      const closestDest = passengers.map(p => p.destinationFloor).reduce((prev, curr) => {
+          return (Math.abs(curr - floor) < Math.abs(prev - floor) ? curr : prev);
+      });
+      return closestDest;
     }
-  }
+
+    // 2. No passengers: Look for the closest overall call.
+    let closestCall: number | null = null;
+    let minDistance = Infinity;
+
+    waitingPassengers.forEach((floorWaiting, floorIndex) => {
+        if (floorWaiting.length > 0) {
+            const distance = Math.abs(floor - floorIndex);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestCall = floorIndex;
+            }
+        }
+    });
+
+    // Don't show a target if the call is on the current floor.
+    if (closestCall !== null && closestCall !== floor) {
+        return closestCall;
+    }
+
+    return null;
+  };
+
+  const targetFloor = getTargetFloor();
 
   return (
     <div
@@ -39,12 +74,9 @@ export function ElevatorCar({ style, passengers, direction, distanceTraveled, fl
         <div className="flex items-center gap-1">
           <DirectionIcon className="w-3 h-3 sm:w-4 sm:h-4 text-accent-foreground shrink-0" />
           {targetFloor !== null && (
-              <div className="flex items-center gap-0.5 text-accent-foreground">
-                  <Target className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                  <span className="text-[10px] sm:text-xs font-mono font-bold">
-                      {targetFloor}
-                  </span>
-              </div>
+              <span className="text-[10px] sm:text-xs font-mono font-bold text-accent-foreground">
+                  {targetFloor}
+              </span>
           )}
         </div>
         
