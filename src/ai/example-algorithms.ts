@@ -308,3 +308,5 @@ function manageElevator(input) {
         code: `function manageElevator(input){const{myElevator:t,waitingCalls:e,numFloors:i}=input,r=()=>t.passengers.some(e=>e.destinationFloor>t.floor)||e.some((e,i)=>e&&i>t.floor),s=()=>t.passengers.some(e=>e.destinationFloor<t.floor)||e.some((e,i)=>e&&i<t.floor);if(t.passengers.some(e=>e.destinationFloor===t.floor))return"idle";if(e[t.floor])return"idle";if("up"===t.direction)return r()?"up":s()?"down":"idle";if("down"===t.direction)return s()?"down":r()?"up":"idle";if("idle"===t.direction){if(r())return"up";if(s())return"down"}return"idle"}`
     }
 ];
+
+    
