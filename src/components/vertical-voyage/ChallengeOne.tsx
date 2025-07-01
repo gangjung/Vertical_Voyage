@@ -1,3 +1,4 @@
+
 // components/vertical-voyage/ChallengeOne.tsx
 "use client";
 
@@ -327,7 +328,7 @@ export function ChallengeOne() {
                 </Select>
               </div>
             </div>
-            <div className="text-sm text-muted-foreground mb-3 space-y-2">
+            <div className="text-sm text-muted-foreground mb-3 space-y-4">
               <p>
                   아래 텍스트 영역에 `manageElevators` 함수를 JavaScript로 작성하세요. 
                   이 함수는 시뮬레이션의 매 스텝마다 호출되며, 각 엘리베이터가 다음에 어떤 행동을 할지 결정해야 합니다.
@@ -355,6 +356,34 @@ export function ChallengeOne() {
                   <p className="text-xs mt-1">
                       엘리베이터 {numElevators}대에 대한 명령이 담긴 배열을 반환해야 합니다. 각 명령은 <code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, 또는 <code className="p-0.5 rounded bg-muted">'idle'</code> 중 하나여야 합니다. (예: <code className="p-0.5 rounded bg-muted">['up', 'down', 'idle', 'up']</code>)
                   </p>
+              </div>
+              <div>
+                  <h4 className="font-medium text-foreground">승객 탑승 방법:</h4>
+                  <p className="text-xs mt-1">
+                      승객 탑승은 시뮬레이션에 의해 자동으로 처리됩니다. 알고리즘은 다음 조건을 만족시켜야 합니다:
+                  </p>
+                  <ul className="list-['-_'] list-inside pl-4 mt-1 space-y-1 text-xs">
+                      <li>엘리베이터가 승객이 기다리는 층에 있어야 합니다.</li>
+                      <li>엘리베이터에 빈 자리가 있어야 합니다.</li>
+                      <li>
+                          반환하는 명령(<code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, <code className="p-0.5 rounded bg-muted">'idle'</code>)이 중요합니다.
+                          <ul className="list-['•_'] list-inside pl-4 mt-1">
+                              <li><code className="p-0.5 rounded bg-muted">'up'</code>: 위로 가려는 승객만 태웁니다.</li>
+                              <li><code className="p-0.5 rounded bg-muted">'down'</code>: 아래로 가려는 승객만 태웁니다.</li>
+                              <li><code className="p-0.5 rounded bg-muted">'idle'</code>: 방향에 상관없이 대기 중인 승객을 태웁니다.</li>
+                          </ul>
+                      </li>
+                  </ul>
+              </div>
+              <div>
+                  <h5 className="font-semibold text-foreground">💡 팁: 시간 효율 마스터하기</h5>
+                   <p className="text-xs mt-1">
+                      명령어에 따라 승객을 태우고 다음 층으로 이동하는 데 걸리는 시간(스텝)이 다릅니다. 이를 활용하는 것이 고득점의 핵심입니다.
+                   </p>
+                   <ul className="list-['-_'] list-inside pl-4 mt-1 space-y-1 text-xs">
+                      <li><strong className="text-foreground">1-스텝 픽업 (방향 유지):</strong> 엘리베이터의 이동 방향(<code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>)과 같은 방향으로 가려는 승객을 만나면, 멈춤 없이 즉시 태우고 **같은 스텝에 바로 다음 층으로 이동**합니다. 가장 빠른 방법입니다.</li>
+                      <li><strong className="text-foreground">2-스텝 픽업 ('idle' 정차):</strong> <code className="p-0.5 rounded bg-muted">'idle'</code> 명령은 '완전한 정지'를 의미합니다. **한 스텝을 소모해 멈춰서** 승객을 태우고, 그 다음 스텝에 새로운 목적지를 향해 이동을 시작합니다. 방향과 상관없이 태울 수 있는 안전한 방법이지만 시간 비용이 더 듭니다.</li>
+                  </ul>
               </div>
             </div>
             <Textarea
