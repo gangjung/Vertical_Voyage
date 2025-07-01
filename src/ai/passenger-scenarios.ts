@@ -155,10 +155,22 @@ const eveningRushScenario: PassengerManifest = [
   { id: 40, spawnTime: 77, originFloor: 9, destinationFloor: 3 },
 ];
 
+const denseScenario40: PassengerManifest = normalScenario.map(p => ({ ...p, spawnTime: Math.max(1, Math.floor(p.spawnTime * 0.7)) })).sort((a,b) => a.spawnTime - b.spawnTime);
+const sparseScenario40: PassengerManifest = normalScenario.map(p => ({ ...p, spawnTime: Math.floor(p.spawnTime * 1.5) })).sort((a,b) => a.spawnTime - b.spawnTime);
+
+
 export const passengerScenarios = [
     {
         name: '일반',
         manifest: normalScenario,
+    },
+    {
+        name: '일반 (간격 좁게)',
+        manifest: denseScenario40,
+    },
+    {
+        name: '일반 (간격 넓게)',
+        manifest: sparseScenario40,
     },
     {
         name: '아침 출근 시간',
@@ -210,10 +222,22 @@ const eveningRushScenario80: PassengerManifest = [
     { id: 71, spawnTime: 212, originFloor: 8, destinationFloor: 1 }, { id: 72, spawnTime: 215, originFloor: 4, destinationFloor: 0 }, { id: 73, spawnTime: 218, originFloor: 6, destinationFloor: 0 }, { id: 74, spawnTime: 221, originFloor: 2, destinationFloor: 0 }, { id: 75, spawnTime: 224, originFloor: 7, destinationFloor: 0 }, { id: 76, spawnTime: 227, originFloor: 9, destinationFloor: 0 }, { id: 77, spawnTime: 230, originFloor: 3, destinationFloor: 0 }, { id: 78, spawnTime: 233, originFloor: 5, destinationFloor: 0 }, { id: 79, spawnTime: 236, originFloor: 8, destinationFloor: 0 }, { id: 80, spawnTime: 239, originFloor: 6, destinationFloor: 0 },
 ];
 
+const denseScenario80: PassengerManifest = normalScenario80.map(p => ({ ...p, spawnTime: Math.max(1, Math.floor(p.spawnTime * 0.7)) })).sort((a,b) => a.spawnTime - b.spawnTime);
+const sparseScenario80: PassengerManifest = normalScenario80.map(p => ({ ...p, spawnTime: Math.floor(p.spawnTime * 1.5) })).sort((a,b) => a.spawnTime - b.spawnTime);
+
+
 export const passengerScenarios80 = [
     {
         name: '일반',
         manifest: normalScenario80,
+    },
+     {
+        name: '일반 (간격 좁게)',
+        manifest: denseScenario80,
+    },
+    {
+        name: '일반 (간격 넓게)',
+        manifest: sparseScenario80,
     },
     {
         name: '아침 출근 시간',
@@ -252,10 +276,22 @@ const eveningRushScenario50: PassengerManifest = [
     { id: 41, spawnTime: 79, originFloor: 7, destinationFloor: 0 }, { id: 42, spawnTime: 80, originFloor: 5, destinationFloor: 0 }, { id: 43, spawnTime: 82, originFloor: 8, destinationFloor: 0 }, { id: 44, spawnTime: 84, originFloor: 2, destinationFloor: 0 }, { id: 45, spawnTime: 85, originFloor: 9, destinationFloor: 0 }, { id: 46, spawnTime: 87, originFloor: 6, destinationFloor: 0 }, { id: 47, spawnTime: 89, originFloor: 4, destinationFloor: 0 }, { id: 48, spawnTime: 91, originFloor: 7, destinationFloor: 0 }, { id: 49, spawnTime: 94, originFloor: 3, destinationFloor: 0 }, { id: 50, spawnTime: 96, originFloor: 8, destinationFloor: 0 },
 ];
 
+const denseScenario50: PassengerManifest = normalScenario50.map(p => ({ ...p, spawnTime: Math.max(1, Math.floor(p.spawnTime * 0.7)) })).sort((a,b) => a.spawnTime - b.spawnTime);
+const sparseScenario50: PassengerManifest = normalScenario50.map(p => ({ ...p, spawnTime: Math.floor(p.spawnTime * 1.5) })).sort((a,b) => a.spawnTime - b.spawnTime);
+
+
 export const passengerScenarios50 = [
     {
         name: '일반',
         manifest: normalScenario50,
+    },
+    {
+        name: '일반 (간격 좁게)',
+        manifest: denseScenario50,
+    },
+    {
+        name: '일반 (간격 넓게)',
+        manifest: sparseScenario50,
     },
     {
         name: '아침 출근 시간',
