@@ -15,8 +15,9 @@ import { Users, Footprints, Code, Play, Trophy, Clock, Route, Milestone, Timer, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exampleAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
-import { passengerScenarios } from '@/ai/passenger-scenarios';
+import { generateRandomManifest, passengerScenarios } from '@/ai/passenger-scenarios';
 import type { PassengerManifest } from '@/ai/passenger-scenarios';
+import { manageElevators as defaultManageElevators } from '@/ai/elevator-algorithm';
 
 const NUM_FLOORS = 10;
 const ELEVATOR_CAPACITY = 8;
@@ -28,32 +29,36 @@ const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
   </>
 );
 
-const generateRandomManifest = (numFloors: number, numPassengers: number, maxSpawnTime: number): PassengerManifest => {
-    const manifest: Omit<Person, 'id' | 'pickupTime'>[] = [];
-    for (let i = 0; i < numPassengers; i++) {
-        let originFloor = 0;
-        let destinationFloor = 0;
-        do {
-            originFloor = Math.floor(Math.random() * numFloors);
-            destinationFloor = Math.floor(Math.random() * numFloors);
-        } while (originFloor === destinationFloor);
-        
-        manifest.push({
-            spawnTime: Math.floor(Math.random() * maxSpawnTime) + 1,
-            originFloor,
-            destinationFloor,
-        });
-    }
-    return manifest
-      .sort((a, b) => a.spawnTime - b.spawnTime)
-      .map((p, i) => ({ ...p, id: i + 1 }));
-};
-
 export function ChallengeOne() {
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
-  const [code, setCode] = useState(exampleAlgorithms[0].code);
-  const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(null);
+  const [code, setCode] = useState(
+    `// 엘리베이터가 한 명의 승객만 따라다니는 매우 간단한 기본 알고리즘입니다.
+// 이 코드를 수정하거나, 예시를 선택하여 더 효율적인 알고리즘을 만들어보세요!
+function manageElevators(input) {
+  const { elevators } = input;
+
+  const commands = elevators.map(elevator => {
+    // 1. 만약 엘리베이터에 승객이 있다면,
+    if (elevator.passengers.length > 0) {
+      const firstPassenger = elevator.passengers[0];
+      // 첫 번째 승객의 목적지로 이동합니다. (매우 비효율적!)
+      if (firstPassenger.destinationFloor > elevator.floor) {
+        return 'up';
+      }
+      if (firstPassenger.destinationFloor < elevator.floor) {
+        return 'down';
+      }
+    }
+    
+    // 2. 승객이 없거나 목적지에 도착했다면, 그냥 멈춥니다.
+    return 'idle';
+  });
+
+  return commands;
+}`
+  );
+  const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(() => defaultManageElevators);
   
   const [selectedScenarioName, setSelectedScenarioName] = useState(passengerScenarios[0].name);
   const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
@@ -344,7 +349,6 @@ export function ChallengeOne() {
                       setCode(selectedAlgo.code);
                     }
                   }}
-                  defaultValue={exampleAlgorithms[0].name}
                 >
                   <SelectTrigger id="algorithm-select" className="w-full">
                     <SelectValue placeholder="예시를 선택하세요" />
@@ -388,11 +392,12 @@ export function ChallengeOne() {
                       <li><code className="p-0.5 rounded bg-muted">numFloors</code>: 건물의 총 층 수.</li>
                       <li><code className="p-0.5 rounded bg-muted">elevatorCapacity</code>: 엘리베이터 최대 용량.</li>
                       <li>
-                          <code className="p-0.5 rounded bg-muted">elevators</code>: 엘리베이터 객체 배열. 각 객체는 다음을 포함:
+                          <code className="p-0.5 rounded bg-muted">elevators</code>: 모든 엘리베이터의 상태가 담긴 배열입니다. 각 엘리베이터 객체는 다음 속성을 가집니다:
                           <ul className="list-['-_'] list-inside pl-4 mt-1">
+                              <li><code className="p-0.5 rounded bg-muted">id</code>: 엘리베이터 고유 번호 (1, 2, ...)</li>
                               <li><code className="p-0.5 rounded bg-muted">floor</code>: 현재 층 (0부터 시작)</li>
-                              <li><code className="p-0.5 rounded bg-muted">direction</code>: 현재 방향 ('up', 'down', 'idle')</li>
-                              <li><code className="p-0.5 rounded bg-muted">passengers</code>: 탑승 중인 승객 배열. 각 승객 객체는 승객의 목적지 층을 나타내는 <code className="p-0.5 rounded bg-muted">destinationFloor</code> 숫자 속성을 가집니다.</li>
+                              <li><code className="p-0.5 rounded bg-muted">direction</code>: 현재 이동 방향 ('up', 'down', 'idle')</li>
+                              <li><code className="p-0.5 rounded bg-muted">passengers</code>: 탑승 중인 승객 배열. (각 승객은 `destinationFloor` 속성을 가집니다)</li>
                               <li><code className="p-0.5 rounded bg-muted">distanceTraveled</code>: 총 이동 거리</li>
                           </ul>
                       </li>

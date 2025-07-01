@@ -38,93 +38,23 @@ export function manageElevators(input: AlgorithmInput): ElevatorCommand[] {
   // ===== 여기에 자신만의 엘리베이터 알고리즘을 구현하세요! =====
   // =================================================================
 
-  /*
-   * `input` 객체에는 시뮬레이션의 현재 상태 정보가 담겨 있습니다.
-   * 이 정보를 활용하여 각 엘리베이터의 다음 행동을 결정하세요.
-   * 
-   * - input.currentTime: 현재 시뮬레이션 스텝(시간)입니다. (number)
-   * 
-   * - input.elevators: 건물에 있는 모든 엘리베이터의 상태 배열입니다. (ElevatorState[])
-   *   - elevator.id: 엘리베이터의 고유 번호 (1, 2, ...)
-   *   - elevator.floor: 현재 엘리베이터가 위치한 층 (0부터 시작)
-   *   - elevator.direction: 현재 엘리베이터의 이동 방향 ('up', 'down', 'idle')
-   *   - elevator.passengers: 엘리베이터에 탑승 중인 승객 목록 (Person[])
-   *     - person.id: 승객의 고유 번호
-   *     - person.originFloor: 승객이 탑승한 층
-   *     - person.destinationFloor: 승객의 목적지 층
-   *   - elevator.distanceTraveled: 엘리베이터가 이동한 총 거리 (층 수 기준)
-   * 
-   * - input.waitingPassengers: 각 층에서 엘리베이터를 기다리는 승객들의 목록입니다. (Person[][])
-   *   - waitingPassengers[i]는 i층에서 대기 중인 승객들의 배열을 의미합니다.
-   * 
-   * - input.numFloors: 건물의 총 층 수입니다. (number)
-   * 
-   * - input.elevatorCapacity: 엘리베이터 한 대의 최대 수용 인원입니다. (number)
-   */
+  const { elevators } = input;
 
-  const { elevators, waitingPassengers, numFloors } = input;
-  
+  // 각 엘리베이터에 대해 아주 간단한 명령을 내립니다.
   const commands = elevators.map(elevator => {
-    // 1. 탑승객이 있을 경우, 목적지를 우선으로 처리합니다.
+    // 1. 만약 엘리베이터에 승객이 있다면,
     if (elevator.passengers.length > 0) {
-      const wantsToGoUp = elevator.passengers.some(p => p.destinationFloor > elevator.floor);
-      const wantsToGoDown = elevator.passengers.some(p => p.destinationFloor < elevator.floor);
-
-      // 엘리베이터가 '위'로 이동 중일 때, 더 위로 갈 승객이 있다면 계속 올라갑니다.
-      if (elevator.direction === 'up') {
-        if (wantsToGoUp) return 'up';
-        if (wantsToGoDown) return 'down'; // 위로 갈 승객이 없으면, 아래로 갈 승객을 위해 방향 전환
+      const firstPassenger = elevator.passengers[0];
+      // 첫 번째 승객의 목적지로 이동합니다. (매우 비효율적!)
+      if (firstPassenger.destinationFloor > elevator.floor) {
+        return 'up';
       }
-
-      // 엘리베이터가 '아래'로 이동 중일 때, 더 아래로 갈 승객이 있다면 계속 내려갑니다.
-      if (elevator.direction === 'down') {
-        if (wantsToGoDown) return 'down';
-        if (wantsToGoUp) return 'up'; // 아래로 갈 승객이 없으면, 위로 갈 승객을 위해 방향 전환
+      if (firstPassenger.destinationFloor < elevator.floor) {
+        return 'down';
       }
-      
-      // 엘리베이터가 '유휴' 상태였다면 (방금 승객을 태웠다면), 승객 목적지에 따라 새 방향을 결정합니다.
-      if (elevator.direction === 'idle') {
-        if (wantsToGoUp) return 'up';
-        if (wantsToGoDown) return 'down';
-      }
-
-      // 최상층/최하층 경계 처리
-      if (elevator.floor === numFloors - 1 && wantsToGoDown) return 'down';
-      if (elevator.floor === 0 && wantsToGoUp) return 'up';
-      
-      // 현재 층에 모든 승객이 내리는 경우 등, 다음 행동이 정해지지 않으면 '유휴' 상태가 됩니다.
-      return 'idle';
-    }
-
-    // 2. 탑승객이 없고, 대기 승객이 있는 경우 가장 가까운 호출에 응답합니다.
-    const isAnyoneWaiting = waitingPassengers.some(floor => floor.length > 0);
-    if (isAnyoneWaiting) {
-        let closestFloor = -1;
-        let minDistance = Infinity;
-
-        waitingPassengers.forEach((floor, floorIndex) => {
-            if (floor.length > 0) {
-                const distance = Math.abs(elevator.floor - floorIndex);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestFloor = floorIndex;
-                }
-            }
-        });
-        
-        if (closestFloor !== -1) {
-            if (closestFloor > elevator.floor) {
-                return 'up';
-            } else if (closestFloor < elevator.floor) {
-                return 'down';
-            } else {
-                // 호출이 현재 층에 있으면, 승객을 태우기 위해 '유휴' 상태를 유지합니다.
-                return 'idle';
-            }
-        }
     }
     
-    // 3. 아무도 없으면 유휴 상태로 대기합니다.
+    // 2. 승객이 없거나 목적지에 도착했다면, 그냥 멈춥니다.
     return 'idle';
   });
 

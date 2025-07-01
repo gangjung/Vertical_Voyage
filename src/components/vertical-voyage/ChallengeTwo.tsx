@@ -14,34 +14,12 @@ import { Users, Footprints, Code, Play, Trophy, Route, Timer, UsersRound, Bot, P
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exampleCompetitionAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
-import { passengerScenarios } from '@/ai/passenger-scenarios';
+import { generateRandomManifest, passengerScenarios } from '@/ai/passenger-scenarios';
 import type { PassengerManifest } from '@/ai/passenger-scenarios';
 import { cn } from '@/lib/utils';
 
 const NUM_FLOORS = 10;
 const ELEVATOR_CAPACITY = 8;
-
-const generateRandomManifest = (numFloors: number, numPassengers: number, maxSpawnTime: number): PassengerManifest => {
-    const manifest: Omit<Person, 'id' | 'pickupTime'>[] = [];
-    for (let i = 0; i < numPassengers; i++) {
-        let originFloor = 0;
-        let destinationFloor = 0;
-        do {
-            originFloor = Math.floor(Math.random() * numFloors);
-            destinationFloor = Math.floor(Math.random() * numFloors);
-        } while (originFloor === destinationFloor);
-        
-        manifest.push({
-            spawnTime: Math.floor(Math.random() * maxSpawnTime) + 1,
-            originFloor,
-            destinationFloor,
-        });
-    }
-    return manifest
-      .sort((a, b) => a.spawnTime - b.spawnTime)
-      .map((p, i) => ({ ...p, id: i + 1 }));
-};
-
 
 export function ChallengeTwo() {
   const [isClient, setIsClient] = useState(false);

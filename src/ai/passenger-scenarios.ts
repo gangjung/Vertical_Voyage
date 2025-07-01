@@ -5,6 +5,27 @@ import type { Person } from '@/hooks/useElevatorSimulation';
 // This type is exported for use in other files
 export type PassengerManifest = Omit<Person, 'pickupTime'>[];
 
+export const generateRandomManifest = (numFloors: number, numPassengers: number, maxSpawnTime: number): PassengerManifest => {
+    const manifest: Omit<Person, 'id' | 'pickupTime'>[] = [];
+    for (let i = 0; i < numPassengers; i++) {
+        let originFloor = 0;
+        let destinationFloor = 0;
+        do {
+            originFloor = Math.floor(Math.random() * numFloors);
+            destinationFloor = Math.floor(Math.random() * numFloors);
+        } while (originFloor === destinationFloor);
+        
+        manifest.push({
+            spawnTime: Math.floor(Math.random() * maxSpawnTime) + 1,
+            originFloor,
+            destinationFloor,
+        });
+    }
+    return manifest
+      .sort((a, b) => a.spawnTime - b.spawnTime)
+      .map((p, i) => ({ ...p, id: i + 1 }));
+};
+
 const normalScenario: PassengerManifest = [
   { id: 1, spawnTime: 4, originFloor: 1, destinationFloor: 8 },
   { id: 2, spawnTime: 6, originFloor: 8, destinationFloor: 2 },
