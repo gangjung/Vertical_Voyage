@@ -1,4 +1,3 @@
-
 // components/vertical-voyage/ChallengeOne.tsx
 "use client";
 
@@ -15,7 +14,7 @@ import { Users, Footprints, Code, Play, Trophy, Clock, Route, Milestone, Timer, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exampleAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
-import { generateRandomManifest, passengerScenarios } from '@/ai/passenger-scenarios';
+import { passengerScenarios, passengerScenarios100, generateRandomManifest } from '@/ai/passenger-scenarios';
 import type { PassengerManifest } from '@/ai/passenger-scenarios';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -32,14 +31,27 @@ const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
 export function ChallengeOne() {
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
+  
+  const [numElevators, setNumElevators] = useState(2);
+  const currentScenarios = numElevators === 4 ? passengerScenarios100 : passengerScenarios;
+
   const [code, setCode] = useState(exampleAlgorithms[0].code);
   const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(null);
   
-  const [selectedScenarioName, setSelectedScenarioName] = useState(passengerScenarios[0].name);
-  const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
+  const [selectedScenarioName, setSelectedScenarioName] = useState(currentScenarios[0].name);
+  const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(currentScenarios[0].manifest);
   const [shouldStartAfterRandom, setShouldStartAfterRandom] = useState(false);
 
-  const [numElevators, setNumElevators] = useState(4);
+  useEffect(() => {
+    const newScenarios = numElevators === 4 ? passengerScenarios100 : passengerScenarios;
+    const newDefaultScenario = newScenarios[0];
+    
+    setSelectedScenarioName(newDefaultScenario.name);
+    setPassengerManifest(newDefaultScenario.manifest);
+    // This will trigger the reset in useElevatorSimulation hook
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numElevators]);
+
 
   const { 
     state: simulation, 
@@ -75,7 +87,9 @@ export function ChallengeOne() {
        reset();
        setTimeout(() => {
          if (selectedScenarioName === '랜덤') {
-            const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
+            const numPassengers = numElevators === 4 ? 100 : 50;
+            const maxSpawnTime = numElevators === 4 ? 340 : 170;
+            const randomManifest = generateRandomManifest(NUM_FLOORS, numPassengers, maxSpawnTime);
             setPassengerManifest(randomManifest);
             setShouldStartAfterRandom(true);
           } else {
@@ -84,7 +98,9 @@ export function ChallengeOne() {
        }, 50);
     } else {
       if (selectedScenarioName === '랜덤' && passengerManifest.length === 0) {
-        const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
+        const numPassengers = numElevators === 4 ? 100 : 50;
+        const maxSpawnTime = numElevators === 4 ? 340 : 170;
+        const randomManifest = generateRandomManifest(NUM_FLOORS, numPassengers, maxSpawnTime);
         setPassengerManifest(randomManifest);
         setShouldStartAfterRandom(true);
       } else {
@@ -293,15 +309,31 @@ export function ChallengeOne() {
           <CardContent className="p-3 border-t">
             <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
+                <Label htmlFor="elevator-count-select" className="mb-2 block text-sm font-medium"><Building className="inline-block w-4 h-4 mr-1"/>엘리베이터 수 선택</Label>
+                <Select
+                  value={String(numElevators)}
+                  onValueChange={(value) => {
+                    setNumElevators(Number(value));
+                  }}
+                >
+                  <SelectTrigger id="elevator-count-select" className="w-full">
+                    <SelectValue placeholder="엘리베이터 수를 선택하세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2">2대 (승객 50명)</SelectItem>
+                    <SelectItem value="4">4대 (승객 100명)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+               <div>
                 <Label htmlFor="scenario-select" className="mb-2 block text-sm font-medium"><UsersRound className="inline-block w-4 h-4 mr-1"/>승객 시나리오 선택</Label>
                 <Select
                   value={selectedScenarioName}
                   onValueChange={(value) => {
                     setSelectedScenarioName(value);
-                    const selectedScenario = passengerScenarios.find(s => s.name === value);
+                    const selectedScenario = currentScenarios.find(s => s.name === value);
                     if (selectedScenario) {
                       setPassengerManifest(selectedScenario.manifest); // This will include the empty array for '랜덤'
-                      reset();
                     }
                   }}
                 >
@@ -309,7 +341,7 @@ export function ChallengeOne() {
                     <SelectValue placeholder="시나리오를 선택하세요" />
                   </SelectTrigger>
                   <SelectContent>
-                    {passengerScenarios.map((scenario) => (
+                    {currentScenarios.map((scenario) => (
                       <SelectItem key={scenario.name} value={scenario.name}>
                         {scenario.name}
                       </SelectItem>
@@ -337,23 +369,6 @@ export function ChallengeOne() {
                         {algo.name}
                       </SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="elevator-count-select" className="mb-2 block text-sm font-medium"><Building className="inline-block w-4 h-4 mr-1"/>엘리베이터 수 선택</Label>
-                <Select
-                  value={String(numElevators)}
-                  onValueChange={(value) => {
-                    setNumElevators(Number(value));
-                  }}
-                >
-                  <SelectTrigger id="elevator-count-select" className="w-full">
-                    <SelectValue placeholder="엘리베이터 수를 선택하세요" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2">2대</SelectItem>
-                    <SelectItem value="4">4대</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
