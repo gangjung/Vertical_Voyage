@@ -70,15 +70,28 @@ export function ChallengeTwo() {
   }, [passengerManifest, shouldStartAfterRandom]);
 
   const handleStartClick = () => {
-    if (selectedScenarioName === '랜덤') {
-      const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
-      reset();
-      setPassengerManifest(randomManifest);
-      setShouldStartAfterRandom(true);
+    if (isRunning) {
+       reset();
+       setTimeout(() => {
+         if (selectedScenarioName === '랜덤') {
+            const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
+            setPassengerManifest(randomManifest);
+            setShouldStartAfterRandom(true);
+          } else {
+            start();
+          }
+       }, 50);
     } else {
-      start();
+      if (selectedScenarioName === '랜덤' && passengerManifest.length === 0) {
+        const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
+        setPassengerManifest(randomManifest);
+        setShouldStartAfterRandom(true);
+      } else {
+        start();
+      }
     }
   };
+
 
   const handleApplyCode = (
     code: string, 
@@ -236,7 +249,7 @@ export function ChallengeTwo() {
                       {exampleCompetitionAlgorithms.map(a => <SelectItem key={a.name} value={a.name} disabled={a.isBot}>{a.name}</SelectItem>)}
                   </SelectContent>
               </Select>
-              <Textarea value={codeA} onChange={e => setCodeA(e.target.value)} className="font-mono h-96 text-xs mt-2" placeholder="function manageElevator(input) { ... }"/>
+              <Textarea value={codeA} onChange={e => setCodeA(e.target.value)} className="font-mono h-[450px] text-xs mt-2" placeholder="function manageElevator(input) { ... }"/>
           </CardContent>
           <CardFooter>
               <Button onClick={() => handleApplyCodeA()} className="w-full bg-blue-600 hover:bg-blue-700"><Code className="mr-2 h-4 w-4"/>Apply Algorithm A</Button>
@@ -290,7 +303,7 @@ export function ChallengeTwo() {
                     setCodeB(e.target.value);
                     setIsBotB(false);
                 }}
-                className="font-mono h-96 text-xs mt-2" 
+                className="font-mono h-[450px] text-xs mt-2" 
                 placeholder="function manageElevator(input) { ... }"
                 readOnly={isBotB}
               />
@@ -316,15 +329,10 @@ export function ChallengeTwo() {
                   value={selectedScenarioName}
                   onValueChange={(value) => {
                     setSelectedScenarioName(value);
-                    if (value !== '랜덤') {
-                      const selectedScenario = passengerScenarios.find(s => s.name === value);
-                      if (selectedScenario) {
-                        reset();
-                        setPassengerManifest(selectedScenario.manifest);
-                      }
-                    } else {
+                    const selectedScenario = passengerScenarios.find(s => s.name === value);
+                    if (selectedScenario) {
+                      setPassengerManifest(selectedScenario.manifest); // This will include the empty array for '랜덤'
                       reset();
-                      setPassengerManifest([]);
                     }
                   }}
               >
@@ -339,7 +347,7 @@ export function ChallengeTwo() {
                 </div>
                  <div className="flex items-center justify-between mt-1">
                     <div className="flex items-center gap-2 text-muted-foreground"><Users className="w-4 h-4"/><span>Passengers Left</span></div>
-                    <span className="font-bold">{passengerManifest.length > 0 ? passengerManifest.length - stats.passengersServed.reduce((a,b) => a+b, 0) : 0}</span>
+                    <span className="font-bold">{passengerManifest.length > 0 ? Math.max(0, passengerManifest.length - (stats.passengersServed[0] + stats.passengersServed[1])) : 0}</span>
                 </div>
             </div>
           </div>
@@ -348,72 +356,73 @@ export function ChallengeTwo() {
               <AccordionItem value="item-1">
                 <AccordionTrigger>대결 규칙</AccordionTrigger>
                 <AccordionContent className="text-sm text-muted-foreground space-y-2 pt-2">
-                  <ul className="list-disc list-inside space-y-1 text-xs">
-                    <li><span className="font-bold text-foreground">승리 조건:</span> 1순위 - 더 많은 승객 수송. 2순위(동점 시) - 더 적은 이동 거리.</li>
-                    <li><span className="font-bold text-foreground">정보 제한:</span> 알고리즘은 각 층에 호출이 있는지(`true/false`)만 알 수 있으며, 대기 승객 수나 목적지 정보는 알 수 없습니다.</li>
-                    <li><span className="font-bold text-foreground">동시 도착:</span> 두 엘리베이터가 같은 층에 동시에 도착하면, 대기 중인 승객은 랜덤하게 나뉘어 탑승합니다.</li>
-                    <li><span className="font-bold text-foreground">호출 신호 변경:</span> 층의 호출 신호는 승객이 나타나면 `true`가 되며, 해당 층의 마지막 대기 승객이 탑승한 직후 `false`로 바뀝니다. 이 변경 사항은 다음 스텝에 반영됩니다.</li>
+                  <ul className="list-disc list-inside pl-2 space-y-1 text-xs">
+                    <li><strong className="text-foreground">승리 조건:</strong> <span className="text-green-600">1순위 - 더 많은 승객 수송</span>, <span className="text-amber-600">2순위(동점 시) - 더 적은 이동 거리</span>.</li>
+                    <li><strong className="text-foreground">정보 제한:</strong> 상대 엘리베이터 정보나 대기 승객의 목적지는 알 수 없습니다. 오직 <code className="p-0.5 rounded bg-muted">waitingCalls</code> 배열(<code className="p-0.5 rounded bg-muted">true</code>/`false`)을 통해 층별 <strong className="text-foreground">호출 유무만</strong> 알 수 있습니다.</li>
+                    <li><strong className="text-foreground">동시 도착:</strong> 두 엘리베이터가 같은 층에 동시에 도착하면, 대기 중인 승객은 <strong className="text-foreground">랜덤하게</strong> 나뉘어 탑승합니다.</li>
+                    <li><strong className="text-foreground">호출 신호:</strong> 층의 호출 신호는 해당 층의 마지막 대기 승객이 탑승한 직후 `false`로 바뀝니다. (다음 스텝에 반영)</li>
                   </ul>
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-2">
                 <AccordionTrigger>알고리즘 가이드 (`manageElevator` 함수)</AccordionTrigger>
                 <AccordionContent className="text-sm text-muted-foreground space-y-2 pt-2">
-                  <p className="text-xs">
-                    `manageElevator` 함수는 **내 엘리베이터 한 대**에 대한 다음 행동(<code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, <code className="p-0.5 rounded bg-muted">'idle'</code>)을 결정하여 반환해야 합니다.
+                  <p className="text-xs mb-2">
+                    `manageElevator` 함수는 <strong className="text-foreground">내 엘리베이터 한 대</strong>에 대한 다음 행동(<code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, <code className="p-0.5 rounded bg-muted">'idle'</code>)을 결정하여 반환해야 합니다. `input` 객체는 다음 속성을 가집니다:
                   </p>
-                  <div>
-                    <h5 className="font-medium text-foreground">`input` 객체 속성:</h5>
-                    <ul className="list-disc list-inside pl-2 space-y-1 mt-1 text-xs">
-                      <li>
-                        <code className="p-0.5 rounded bg-muted">myElevator</code>: 제어할 내 엘리베이터의 상태 객체.
-                        <ul className="list-['-_'] list-inside pl-6 mt-1">
-                          <li><code className="p-0.5 rounded bg-muted">floor</code>: 현재 층 (0부터 시작)</li>
-                          <li><code className="p-0.5 rounded bg-muted">direction</code>: 현재 방향 ('up', 'down', 'idle')</li>
-                          <li><code className="p-0.5 rounded bg-muted">passengers</code>: 탑승객 배열. 각 승객은 목적지 `destinationFloor`를 가집니다.</li>
-                          <li><code className="p-0.5 rounded bg-muted">distanceTraveled</code>: 총 이동 거리</li>
-                        </ul>
-                      </li>
-                      <li><code className="p-0.5 rounded bg-muted">waitingCalls</code>: 각 층의 호출 여부 배열 (<code className="p-0.5 rounded bg-muted">true</code>/`false`). `waitingCalls[3]`가 `true`이면 3층에서 호출이 있다는 의미입니다.</li>
-                      <li><code className="p-0.5 rounded bg-muted">numFloors</code>, <code className="p-0.5 rounded bg-muted">elevatorCapacity</code>, <code className="p-0.5 rounded bg-muted">currentTime</code></li>
-                    </ul>
-                  </div>
+                  <ul className="list-disc list-inside pl-2 space-y-2 text-xs">
+                    <li>
+                      <code className="p-0.5 rounded bg-muted">myElevator</code>: 제어할 내 엘리베이터의 상태 객체.
+                      <div className="pl-6 mt-1 border-l ml-2 py-1">
+                          <ul className="list-['-_'] list-inside pl-2 mt-1 space-y-1">
+                            <li><code className="p-0.5 rounded bg-muted">floor</code>: 현재 층</li>
+                            <li><code className="p-0.5 rounded bg-muted">direction</code>: 현재 방향</li>
+                            <li><code className="p-0.5 rounded bg-muted">passengers</code>: 탑승객 배열. (각 승객은 목적지 <code className="p-0.5 rounded bg-muted">destinationFloor</code>를 가짐)</li>
+                          </ul>
+                      </div>
+                    </li>
+                    <li><code className="p-0.5 rounded bg-muted">waitingCalls</code>: 각 층의 호출 여부 배열 (<code className="p-0.5 rounded bg-muted">true</code>/`false`). `waitingCalls[3]`가 `true`이면 3층에서 호출이 있다는 의미.</li>
+                    <li><code className="p-0.5 rounded bg-muted">currentTime</code>, <code className="p-0.5 rounded bg-muted">numFloors</code>, etc.</li>
+                  </ul>
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-3">
-                <AccordionTrigger>승객 탑승 및 이동 규칙 (핵심!)</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground space-y-2 pt-2">
-                  <p className="text-xs">
-                      탑승은 시뮬레이션에 의해 자동으로 처리됩니다. 알고리즘은 다음 조건을 만족시켜야 합니다:
-                  </p>
-                  <ul className="list-['-_'] list-inside pl-4 mt-1 space-y-1 text-xs">
-                    <li>엘리베이터가 승객이 기다리는 층에 있어야 합니다.</li>
-                    <li>엘리베이터에 빈 자리가 있어야 합니다.</li>
-                    <li>
-                        반환하는 명령(<code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, <code className="p-0.5 rounded bg-muted">'idle'</code>)이 중요합니다.
-                        <ul className="list-['•_'] list-inside pl-4 mt-1">
-                            <li><code className="p-0.5 rounded bg-muted">'up'</code>: 위로 가려는 승객만 태웁니다.</li>
-                            <li><code className="p-0.5 rounded bg-muted">'down'</code>: 아래로 가려는 승객만 태웁니다.</li>
-                            <li><code className="p-0.5 rounded bg-muted">'idle'</code>: 방향에 상관없이 대기 중인 승객을 태웁니다. (가장 안전한 탑승 전략)</li>
-                        </ul>
-                    </li>
-                    <li>
-                      <span className="font-semibold text-foreground">예시 코드:</span>
-                      <pre className="bg-muted p-2 rounded-md mt-1 text-xs text-foreground font-mono">
+                <AccordionTrigger>핵심 규칙: 승객 탑승과 시간 효율</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground space-y-3 pt-2">
+                    <div>
+                      <strong className="text-foreground">1. 승객 자동 탑승 규칙</strong>
+                      <p className="text-xs mt-1">엘리베이터가 특정 층에 있고, 빈자리가 있을 때 <strong className="text-foreground">당신의 명령에 따라</strong> 승객이 자동으로 탑승합니다.</p>
+                      <ul className="list-['•_'] list-inside pl-6 mt-1 text-xs space-y-1">
+                        <li><code className="p-0.5 rounded bg-muted">'up'</code> 명령 시: <strong className="text-foreground">위로 가려는</strong> 승객만 탑승.</li>
+                        <li><code className="p-0.5 rounded bg-muted">'down'</code> 명령 시: <strong className="text-foreground">아래로 가려는</strong> 승객만 탑승.</li>
+                        <li><code className="p-0.5 rounded bg-muted">'idle'</code> 명령 시: <strong className="text-foreground">방향에 상관없이</strong> 모든 대기 승객 탑승 (가장 확실한 방법).</li>
+                      </ul>
+                      <div className="mt-2">
+                        <strong className="text-foreground text-xs">예시 코드:</strong>
+                        <pre className="bg-muted p-2 rounded-md mt-1 text-xs text-foreground font-mono">
 {`// 현재 층에 호출이 있으면 'idle'을 반환하여 승객을 태웁니다.
 if (input.waitingCalls[input.myElevator.floor]) {
   return 'idle'; 
 }`}
-                      </pre>
-                    </li>
-                  </ul>
-                  <div className="mt-2">
-                    <h5 className="font-semibold text-foreground">💡 팁: 시간 효율 마스터하기</h5>
-                     <ul className="list-['-_'] list-inside pl-4 mt-1 space-y-1 text-xs">
-                        <li><strong className="text-foreground">1-스텝 픽업 (방향 유지):</strong> 엘리베이터의 이동 방향(<code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>)과 같은 방향으로 가려는 승객을 만나면, 멈춤 없이 즉시 태우고 다음 스텝에 바로 이동합니다. 가장 빠른 방법이지만, 승객의 목적지를 모르므로 위험이 따릅니다.</li>
-                        <li><strong className="text-foreground">2-스텝 픽업 ('idle' 정차):</strong> <code className="p-0.5 rounded bg-muted">'idle'</code> 명령은 '완전한 정지'를 의미합니다. 한 스텝을 소모해 멈춰서 승객을 태우고, 그 다음 스텝에 새 목적지를 향해 이동을 시작합니다. 방향에 상관없이 태울 수 있는 가장 안전한 방법입니다.</li>
-                    </ul>
-                  </div>
+                        </pre>
+                      </div>
+                    </div>
+                     <div className="mt-2">
+                      <strong className="text-foreground">2. 💡 시간 효율 마스터하기 (고득점 팁)</strong>
+                       <p className="text-xs mt-1">명령어에 따라 승객을 태우고 이동하는 데 걸리는 시간(스텝)이 다릅니다. 이걸 잘 써야 이깁니다.</p>
+                       <ul className="list-['-_'] list-inside pl-4 mt-1 space-y-2 text-xs">
+                         <li>
+                           <strong className="text-green-600">⚡ 1-스텝 픽업 (가장 빠름):</strong> 
+                           <br/>
+                           엘리베이터의 이동 방향(<code className="p-0.5 rounded bg-muted">'up'</code>/<code className="p-0.5 rounded bg-muted">'down'</code>)과 같은 방향으로 가는 승객을 만나면, 멈춤 없이 즉시 태우고 <strong className="text-foreground">같은 스텝에 바로 다음 층으로 이동</strong>합니다. (대결 모드에서는 승객 목적지를 모르므로 위험 부담이 있습니다)
+                         </li>
+                         <li>
+                           <strong className="text-amber-600">🐢 2-스텝 픽업 (안전함):</strong>
+                           <br/>
+                           <code className="p-0.5 rounded bg-muted">'idle'</code> 명령은 '완전한 정지'를 의미합니다. <strong className="text-foreground">한 스텝을 소모해 멈춰서</strong> 승객을 태우고, <strong className="text-foreground">그 다음 스텝</strong>에 새로운 목적지를 향해 이동을 시작합니다.
+                         </li>
+                       </ul>
+                     </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
