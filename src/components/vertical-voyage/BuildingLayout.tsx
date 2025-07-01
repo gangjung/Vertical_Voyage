@@ -14,6 +14,7 @@ export function BuildingLayout({ numFloors, elevators, waitingPassengers }: Buil
     return null; // or some placeholder
   }
   
+  const numElevators = elevators.length;
   const leftElevators = elevators.slice(0, elevators.length / 2);
   const rightElevators = elevators.slice(elevators.length / 2);
   
@@ -26,6 +27,7 @@ export function BuildingLayout({ numFloors, elevators, waitingPassengers }: Buil
           numFloors={numFloors}
           elevator={elevator}
           waitingPassengers={waitingPassengers}
+          numElevators={numElevators}
         />
       ))}
 
@@ -34,6 +36,7 @@ export function BuildingLayout({ numFloors, elevators, waitingPassengers }: Buil
         numFloors={numFloors}
         waitingPassengers={waitingPassengers}
         elevatorFloors={elevators.map(e => e.floor)}
+        numElevators={numElevators}
       />
 
       {/* Right Elevator Shafts */}
@@ -43,6 +46,7 @@ export function BuildingLayout({ numFloors, elevators, waitingPassengers }: Buil
           numFloors={numFloors}
           elevator={elevator}
           waitingPassengers={waitingPassengers}
+          numElevators={numElevators}
         />
       ))}
     </div>
