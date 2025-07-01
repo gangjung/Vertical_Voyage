@@ -18,42 +18,45 @@ export function ElevatorCar({ style, passengers, direction, distanceTraveled, fl
   const DirectionIcon = direction === 'up' ? ArrowUp : direction === 'down' ? ArrowDown : MinusSquare;
   
   const getTargetFloor = (): number | null => {
-    // 1. Priority: Passengers inside. Target the nearest stop in the current direction.
-    if (passengers.length > 0) {
-      if (direction === 'up') {
-        const upwardDestinations = passengers.filter(p => p.destinationFloor > floor);
-        if (upwardDestinations.length > 0) return Math.min(...upwardDestinations.map(p => p.destinationFloor));
-      }
-      if (direction === 'down') {
-        const downwardDestinations = passengers.filter(p => p.destinationFloor < floor);
-        if (downwardDestinations.length > 0) return Math.max(...downwardDestinations.map(p => p.destinationFloor));
-      }
-      // If no one is going in the current direction or if idle, find the closest destination of any passenger.
-      const closestDest = passengers.map(p => p.destinationFloor).reduce((prev, curr) => {
-          return (Math.abs(curr - floor) < Math.abs(prev - floor) ? curr : prev);
-      });
-      return closestDest;
+    const passengerDestinations = passengers.map(p => p.destinationFloor);
+    const waitingFloorsWithCalls = waitingPassengers
+        .map((floor, index) => floor.length > 0 ? index : -1)
+        .filter(f => f !== -1);
+
+    // If moving up, the target MUST be above.
+    if (direction === 'up') {
+        const upwardTargets = [
+            ...passengerDestinations.filter(d => d > floor),
+            ...waitingFloorsWithCalls.filter(f => f > floor)
+        ];
+        return upwardTargets.length > 0 ? Math.min(...upwardTargets) : null;
     }
 
-    // 2. No passengers: Look for the closest overall call.
-    let closestCall: number | null = null;
-    let minDistance = Infinity;
+    // If moving down, the target MUST be below.
+    if (direction === 'down') {
+        const downwardTargets = [
+            ...passengerDestinations.filter(d => d < floor),
+            ...waitingFloorsWithCalls.filter(f => f < floor)
+        ];
+        return downwardTargets.length > 0 ? Math.max(...downwardTargets) : null;
+    }
 
-    waitingPassengers.forEach((floorWaiting, floorIndex) => {
-        if (floorWaiting.length > 0) {
-            const distance = Math.abs(floor - floorIndex);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestCall = floorIndex;
-            }
+    // If idle, find the closest target in any direction.
+    if (direction === 'idle') {
+        const allTargets = [...passengerDestinations, ...waitingFloorsWithCalls];
+        if (allTargets.length === 0) {
+            return null;
         }
-    });
 
-    // Don't show a target if the call is on the current floor.
-    if (closestCall !== null && closestCall !== floor) {
-        return closestCall;
+        const closestTarget = allTargets.reduce((prev, curr) => {
+            return Math.abs(curr - floor) < Math.abs(prev - floor) ? curr : prev;
+        });
+
+        // Don't show a target for the current floor
+        return closestTarget !== floor ? closestTarget : null;
     }
 
+    // Should not be reached, but as a fallback.
     return null;
   };
 
@@ -63,7 +66,7 @@ export function ElevatorCar({ style, passengers, direction, distanceTraveled, fl
     <div
       className={cn(
         "absolute left-1 right-1 sm:left-2 sm:right-2 bg-accent rounded shadow-lg flex flex-col items-center justify-between p-1",
-        "transition-[bottom] duration-500 ease-in-out" // CSS transition for smooth movement
+        "transition-[bottom] duration-250 ease-in-out" // CSS transition for smooth movement
         )}
       style={style}
       aria-label={`Elevator car at floor ${floor}. Direction: ${direction}. Passengers: ${passengers.length}`}

@@ -44,7 +44,7 @@ export interface Stats {
 
 
 // --- CONSTANTS ---
-const TICK_INTERVAL_MS = 500;
+const TICK_INTERVAL_MS = 250;
 
 
 // --- HELPER FUNCTION: CORE ELEVATOR LOGIC ---
