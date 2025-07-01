@@ -274,8 +274,36 @@ export function ChallengeTwo() {
               <li><span className="font-bold text-foreground">승리 조건:</span> 1순위 - 더 많은 승객 수송. 2순위(동점 시) - 더 적은 이동 거리.</li>
               <li><span className="font-bold text-foreground">정보 제한:</span> 알고리즘은 각 층에 호출이 있는지(`true/false`)만 알 수 있으며, 대기 승객 수나 목적지 정보는 알 수 없습니다.</li>
               <li><span className="font-bold text-foreground">동시 도착:</span> 두 엘리베이터가 같은 층에 동시에 도착하면, 대기 중인 승객은 랜덤하게 나뉘어 탑승합니다.</li>
-              <li><span className="font-bold text-foreground">함수 형식:</span> `manageElevator(input)` 함수 하나만 작성해야 하며, `input` 객체에는 `myElevator`, `waitingCalls` 등의 정보가 포함됩니다.</li>
             </ul>
+          </div>
+          <div>
+            <h4 className="font-medium text-foreground mb-2 mt-4">알고리즘 가이드 (`manageElevator` 함수)</h4>
+            <div className="text-xs space-y-2">
+                <p>
+                    `manageElevator` 함수는 **내 엘리베이터 한 대**에 대한 다음 행동을 결정합니다.
+                </p>
+                <div>
+                    <h5 className="font-medium text-foreground">`input` 객체 속성:</h5>
+                    <ul className="list-disc list-inside pl-2 space-y-1 mt-1">
+                        <li><code className="p-0.5 rounded bg-muted">myElevator</code>: 제어할 내 엘리베이터의 상태 객체.
+                            <ul className="list-['-_'] list-inside pl-4 mt-1">
+                                <li><code className="p-0.5 rounded bg-muted">floor</code>: 현재 층 (0부터 시작)</li>
+                                <li><code className="p-0.5 rounded bg-muted">direction</code>: 현재 방향 ('up', 'down', 'idle')</li>
+                                <li><code className="p-0.5 rounded bg-muted">passengers</code>: 탑승객 배열. 각 승객은 목적지 `destinationFloor`를 가집니다.</li>
+                                <li><code className="p-0.5 rounded bg-muted">distanceTraveled</code>: 총 이동 거리</li>
+                            </ul>
+                        </li>
+                        <li><code className="p-0.5 rounded bg-muted">waitingCalls</code>: 각 층의 호출 여부 배열 (<code className="p-0.5 rounded bg-muted">true</code>/`false`). `waitingCalls[3]`가 `true`이면 3층에서 호출이 있다는 의미입니다.</li>
+                        <li><code className="p-0.5 rounded bg-muted">numFloors</code>, <code className="p-0.5 rounded bg-muted">elevatorCapacity</code>, <code className="p-0.5 rounded bg-muted">currentTime</code></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 className="font-medium text-foreground">반환값:</h5>
+                    <p className="mt-1">
+                        내 엘리베이터에 대한 명령(<code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>, 또는 <code className="p-0.5 rounded bg-muted">'idle'</code>)을 반환해야 합니다.
+                    </p>
+                </div>
+            </div>
           </div>
         </CardContent>
       </Card>

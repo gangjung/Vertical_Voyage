@@ -208,6 +208,13 @@ export const exampleCompetitionAlgorithms = [
     {
         name: '기본: 최근접 호출 우선',
         code: `// 챌린지 2 기본 알고리즘: 탑승객을 먼저 내리고, 가장 가까운 호출에 응답합니다.
+/*
+ * @param {object} input - 시뮬레이션 상태 데이터
+ * @param {object} input.myElevator - 내 엘리베이터 상태 (floor, passengers 등)
+ * @param {boolean[]} input.waitingCalls - 층별 호출 여부 (승객 정보는 알 수 없음)
+ * @param {number} input.numFloors - 총 층수
+ * @returns {'up'|'down'|'idle'} - 엘리베이터 이동 명령
+ */
 function manageElevator(input) {
   const { myElevator, waitingCalls } = input;
 
@@ -245,6 +252,13 @@ function manageElevator(input) {
     {
         name: '공격적: 항상 위로',
         code: `// 챌린지 2 예시: 항상 위쪽 호출을 먼저 확인하는 공격적인 알고리즘
+/*
+ * @param {object} input - 시뮬레이션 상태 데이터
+ * @param {object} input.myElevator - 내 엘리베이터 상태 (floor, passengers 등)
+ * @param {boolean[]} input.waitingCalls - 층별 호출 여부 (승객 정보는 알 수 없음)
+ * @param {number} input.numFloors - 총 층수
+ * @returns {'up'|'down'|'idle'} - 엘리베이터 이동 명령
+ */
 function manageElevator(input) {
     const { myElevator, waitingCalls, numFloors } = input;
 
