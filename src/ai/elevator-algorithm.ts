@@ -38,23 +38,42 @@ export function manageElevators(input: AlgorithmInput): ElevatorCommand[] {
   // ===== 여기에 자신만의 엘리베이터 알고리즘을 구현하세요! =====
   // =================================================================
 
-  const { elevators } = input;
+  const { elevators, waitingPassengers } = input;
 
-  // 각 엘리베이터에 대해 아주 간단한 명령을 내립니다.
   const commands = elevators.map(elevator => {
-    // 1. 만약 엘리베이터에 승객이 있다면,
+    // 1. 엘리베이터에 승객이 있을 때: 가장 가까운 목적지로 이동
     if (elevator.passengers.length > 0) {
-      const firstPassenger = elevator.passengers[0];
-      // 첫 번째 승객의 목적지로 이동합니다. (매우 비효율적!)
-      if (firstPassenger.destinationFloor > elevator.floor) {
-        return 'up';
-      }
-      if (firstPassenger.destinationFloor < elevator.floor) {
-        return 'down';
-      }
+      const closestDest = elevator.passengers.reduce((prev, curr) =>
+        Math.abs(curr.destinationFloor - elevator.floor) < Math.abs(prev.destinationFloor - elevator.floor) ? curr : prev
+      ).destinationFloor;
+
+      if (closestDest > elevator.floor) return 'up';
+      if (closestDest < elevator.floor) return 'down';
+      return 'idle';
     }
-    
-    // 2. 승객이 없거나 목적지에 도착했다면, 그냥 멈춥니다.
+
+    // 2. 엘리베이터가 비어있을 때: 가장 가까운 호출에 응답
+    // 주의: 이 로직은 여러 엘리베이터가 같은 호출에 몰려가는 비효율을 낳습니다!
+    let closestCall = -1;
+    let minDistance = Infinity;
+
+    waitingPassengers.forEach((floor, floorIndex) => {
+      if (floor.length > 0) {
+        const distance = Math.abs(elevator.floor - floorIndex);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestCall = floorIndex;
+        }
+      }
+    });
+
+    if (closestCall !== -1) {
+      if (closestCall > elevator.floor) return 'up';
+      if (closestCall < elevator.floor) return 'down';
+      return 'idle';
+    }
+
+    // 3. 호출이 없을 때: 대기
     return 'idle';
   });
 

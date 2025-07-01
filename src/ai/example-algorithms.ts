@@ -206,9 +206,9 @@ function manageElevators(input) {
 
 export const exampleCompetitionAlgorithms = [
     {
-        name: '기본: 최근접 호출 우선',
+        name: '기본: 최근접 우선',
         isBot: false,
-        code: `// 챌린지 2 기본 알고리즘: 탑승객을 먼저 내리고, 가장 가까운 호출에 응답합니다.
+        code: `// 챌린지 2 기본 알고리즘: 탑승객의 가장 가까운 목적지로 이동하고, 없으면 가장 가까운 호출에 응답합니다.
 /*
  * @param {object} input - 시뮬레이션 상태 데이터
  * @param {object} input.myElevator - 내 엘리베이터 상태 (floor, passengers 등)
@@ -219,12 +219,15 @@ export const exampleCompetitionAlgorithms = [
 function manageElevator(input) {
   const { myElevator, waitingCalls } = input;
 
-  // 1. 탑승객이 있으면 목적지로 이동
+  // 1. 탑승객이 있으면 가장 가까운 목적지로 이동
   if (myElevator.passengers.length > 0) {
-    const destination = myElevator.passengers[0].destinationFloor;
-    if (destination > myElevator.floor) return 'up';
-    if (destination < myElevator.floor) return 'down';
-    return 'idle';
+    const closestDest = myElevator.passengers.reduce((prev, curr) => 
+        Math.abs(curr.destinationFloor - myElevator.floor) < Math.abs(prev.destinationFloor - myElevator.floor) ? curr : prev
+    ).destinationFloor;
+    
+    if (closestDest > myElevator.floor) return 'up';
+    if (closestDest < myElevator.floor) return 'down';
+    return 'idle'; // 목적지 도착
   }
 
   // 2. 가장 가까운 호출 층으로 이동
