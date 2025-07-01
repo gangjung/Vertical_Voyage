@@ -66,7 +66,7 @@ export function ElevatorCar({ style, passengers, direction, distanceTraveled, fl
     <div
       className={cn(
         "absolute left-1 right-1 sm:left-2 sm:right-2 bg-accent rounded shadow-lg flex flex-col items-center justify-between p-1",
-        "transition-[bottom] duration-250 ease-in-out" // CSS transition for smooth movement
+        "transition-[bottom] duration-500 ease-in-out" // CSS transition for smooth movement
         )}
       style={style}
       aria-label={`Elevator car at floor ${floor}. Direction: ${direction}. Passengers: ${passengers.length}`}
