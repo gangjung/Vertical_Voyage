@@ -203,3 +203,77 @@ function manageElevators(input) {
 }`
     }
 ];
+
+export const exampleCompetitionAlgorithms = [
+    {
+        name: '기본: 최근접 호출 우선',
+        code: `// 챌린지 2 기본 알고리즘: 탑승객을 먼저 내리고, 가장 가까운 호출에 응답합니다.
+function manageElevator(input) {
+  const { myElevator, waitingCalls } = input;
+
+  // 1. 탑승객이 있으면 목적지로 이동
+  if (myElevator.passengers.length > 0) {
+    const destination = myElevator.passengers[0].destinationFloor;
+    if (destination > myElevator.floor) return 'up';
+    if (destination < myElevator.floor) return 'down';
+    return 'idle';
+  }
+
+  // 2. 가장 가까운 호출 층으로 이동
+  let closestCall = -1;
+  let minDistance = Infinity;
+
+  waitingCalls.forEach((isWaiting, floorIndex) => {
+    if (isWaiting) {
+      const distance = Math.abs(myElevator.floor - floorIndex);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestCall = floorIndex;
+      }
+    }
+  });
+
+  if (closestCall !== -1) {
+    if (closestCall > myElevator.floor) return 'up';
+    if (closestCall < myElevator.floor) return 'down';
+    return 'idle';
+  }
+  
+  return 'idle';
+}`
+    },
+    {
+        name: '공격적: 항상 위로',
+        code: `// 챌린지 2 예시: 항상 위쪽 호출을 먼저 확인하는 공격적인 알고리즘
+function manageElevator(input) {
+    const { myElevator, waitingCalls, numFloors } = input;
+
+    // 1. 탑승객 우선
+    if (myElevator.passengers.length > 0) {
+        const dest = myElevator.passengers[0].destinationFloor;
+        if (dest > myElevator.floor) return 'up';
+        if (dest < myElevator.floor) return 'down';
+        return 'idle';
+    }
+
+    // 2. 위쪽 호출이 있는지 확인
+    for (let i = myElevator.floor; i < numFloors; i++) {
+        if (waitingCalls[i]) {
+            if (i > myElevator.floor) return 'up';
+            return 'idle'; // 현재 층 호출
+        }
+    }
+
+    // 3. 아래쪽 호출이 있는지 확인
+    for (let i = myElevator.floor; i >= 0; i--) {
+        if (waitingCalls[i]) {
+            if (i < myElevator.floor) return 'down';
+            return 'idle'; // 현재 층 호출
+        }
+    }
+
+    // 4. 할 일 없으면 대기
+    return 'idle';
+}`
+    }
+];
