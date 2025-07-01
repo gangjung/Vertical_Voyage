@@ -295,12 +295,12 @@ function manageElevator(input) {
     {
         name: '봇 (초급)',
         isBot: true,
-        code: `function manageElevator(input){const{myElevator:t,waitingCalls:e}=input;if(t.passengers.length>0){const i=t.passengers[0].destinationFloor;return i>t.floor?"up":i<t.floor?"down":"idle"}const i=e.findIndex(t=>!0===t);return-1!==i?i>t.floor?"up":i<t.floor?"down":"idle":"idle"}`
+        code: `function manageElevator(input){const{myElevator:t,waitingCalls:e}=input;if(t.passengers.length>0){const i=t.passengers[0].destinationFloor;return i>t.floor?"up":i<t.floor?"down":"idle"}let i=-1,r=1/0;return e.forEach((s,o)=>{if(s){const n=Math.abs(t.floor-o);n<r&&(r=n,i=o)}}),-1!==i?i>t.floor?"up":i<t.floor?"down":"idle":"idle"}`
     },
     {
         name: '봇 (중급)',
         isBot: true,
-        code: `function manageElevator(input){const{myElevator:t,waitingCalls:e}=input;if(t.passengers.length>0){const i=t.passengers.reduce((e,i)=>Math.abs(i.destinationFloor-t.floor)<Math.abs(e.destinationFloor-t.floor)?i:e).destinationFloor;return i>t.floor?"up":i<t.floor?"down":"idle"}let i=-1,r=1/0;return e.forEach((s,o)=>{if(s){const n=Math.abs(t.floor-o);n<r&&(r=n,i=o)}}),-1!==i?i>t.floor?"up":i<t.floor?"down":"idle":"idle"}`
+        code: `function manageElevator(input){const{myElevator:t,waitingCalls:e}=input,r=t.floor,{passengers:n,direction:o}=t;if(n.some(t=>t.destinationFloor===r)||e[r])return"idle";if("up"===o){if(n.some(t=>t.destinationFloor>r)||e.some((t,e)=>t&&e>r))return"up"}if("down"===o){if(n.some(t=>t.destinationFloor<r)||e.some((t,e)=>t&&e<r))return"down"}const a=[...new Set([...n.map(t=>t.destinationFloor),...e.map((t,e)=>t?e:-1).filter(t=>-1!==t)])];if(0===a.length)return"idle";let i=-1,s=1/0;return a.forEach(t=>{const e=Math.abs(r-t);e<s&&(s=e,i=t)}),i>r?"up":i<r?"down":"idle"}`
     },
     {
         name: '봇 (고급)',
