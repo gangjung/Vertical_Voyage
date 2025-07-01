@@ -4,7 +4,7 @@
 
 import { BuildingLayout } from '@/components/vertical-voyage/BuildingLayout';
 import { useElevatorSimulation } from '@/hooks/useElevatorSimulation';
-import type { ElevatorState, AlgorithmInput, ElevatorCommand } from '@/hooks/useElevatorSimulation';
+import type { ElevatorState, AlgorithmInput, ElevatorCommand, Person } from '@/hooks/useElevatorSimulation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -28,12 +28,37 @@ const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
   </>
 );
 
+const generateRandomManifest = (numFloors: number, numPassengers: number, maxSpawnTime: number): PassengerManifest => {
+    const manifest: Omit<Person, 'id' | 'pickupTime'>[] = [];
+    for (let i = 0; i < numPassengers; i++) {
+        let originFloor = 0;
+        let destinationFloor = 0;
+        do {
+            originFloor = Math.floor(Math.random() * numFloors);
+            destinationFloor = Math.floor(Math.random() * numFloors);
+        } while (originFloor === destinationFloor);
+        
+        manifest.push({
+            spawnTime: Math.floor(Math.random() * maxSpawnTime) + 1,
+            originFloor,
+            destinationFloor,
+        });
+    }
+    return manifest
+      .sort((a, b) => a.spawnTime - b.spawnTime)
+      .map((p, i) => ({ ...p, id: i + 1 }));
+};
+
 export function ChallengeOne() {
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
   const [code, setCode] = useState(exampleAlgorithms[0].code);
   const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(null);
+  
+  const [selectedScenarioName, setSelectedScenarioName] = useState(passengerScenarios[0].name);
   const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
+  const [shouldStartAfterRandom, setShouldStartAfterRandom] = useState(false);
+
   const [numElevators, setNumElevators] = useState(4);
 
   const { 
@@ -56,7 +81,25 @@ export function ChallengeOne() {
     handleApplyCode(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (shouldStartAfterRandom) {
+      start();
+      setShouldStartAfterRandom(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [passengerManifest, shouldStartAfterRandom, start]);
   
+  const handleStartClick = () => {
+    if (selectedScenarioName === '랜덤') {
+      const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
+      setShouldStartAfterRandom(true);
+      setPassengerManifest(randomManifest);
+    } else {
+      start();
+    }
+  };
+
   const handleApplyCode = (isInitialLoad = false) => {
     if (!code.trim()) {
       toast({ variant: "destructive", title: "코드가 비어있습니다", description: "알고리즘 코드를 입력해주세요." });
@@ -135,7 +178,7 @@ export function ChallengeOne() {
       
       <div className="w-full flex justify-center my-2">
         {stats.totalOperatingTime > 0 ? (
-          <Button onClick={start} size="lg">
+          <Button onClick={handleStartClick} size="lg">
             <RefreshCw className="mr-2 h-4 w-4" />
             Restart Simulation
           </Button>
@@ -145,7 +188,7 @@ export function ChallengeOne() {
             Pause Simulation
           </Button>
         ) : (
-          <Button onClick={start} size="lg">
+          <Button onClick={handleStartClick} size="lg">
             <Play className="mr-2 h-4 w-4" />
             Start Simulation
           </Button>
@@ -267,13 +310,18 @@ export function ChallengeOne() {
               <div>
                 <Label htmlFor="scenario-select" className="mb-2 block text-sm font-medium"><UsersRound className="inline-block w-4 h-4 mr-1"/>승객 시나리오 선택</Label>
                 <Select
+                  value={selectedScenarioName}
                   onValueChange={(value) => {
-                    const selectedScenario = passengerScenarios.find(s => s.name === value);
-                    if (selectedScenario) {
-                      setPassengerManifest(selectedScenario.manifest);
+                    setSelectedScenarioName(value);
+                    if (value !== '랜덤') {
+                      const selectedScenario = passengerScenarios.find(s => s.name === value);
+                      if (selectedScenario) {
+                        setPassengerManifest(selectedScenario.manifest);
+                      }
+                    } else {
+                      setPassengerManifest([]);
                     }
                   }}
-                  defaultValue={passengerScenarios[0].name}
                 >
                   <SelectTrigger id="scenario-select" className="w-full">
                     <SelectValue placeholder="시나리오를 선택하세요" />

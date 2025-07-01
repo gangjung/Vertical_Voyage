@@ -176,5 +176,9 @@ export const passengerScenarios = [
     {
         name: '저녁 퇴근 시간',
         manifest: eveningRushScenario,
+    },
+    {
+        name: '랜덤',
+        manifest: [], // Placeholder for dynamically generated manifest
     }
 ];

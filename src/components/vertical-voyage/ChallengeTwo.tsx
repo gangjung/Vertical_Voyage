@@ -4,7 +4,7 @@
 
 import { BuildingLayout } from '@/components/vertical-voyage/BuildingLayout';
 import { useElevatorCompetition } from '@/hooks/useElevatorCompetition';
-import type { CompetitionAlgorithmInput, ElevatorCommand } from '@/hooks/useElevatorCompetition';
+import type { CompetitionAlgorithmInput, ElevatorCommand, Person } from '@/hooks/useElevatorCompetition';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +21,28 @@ import { cn } from '@/lib/utils';
 const NUM_FLOORS = 10;
 const ELEVATOR_CAPACITY = 8;
 
+const generateRandomManifest = (numFloors: number, numPassengers: number, maxSpawnTime: number): PassengerManifest => {
+    const manifest: Omit<Person, 'id' | 'pickupTime'>[] = [];
+    for (let i = 0; i < numPassengers; i++) {
+        let originFloor = 0;
+        let destinationFloor = 0;
+        do {
+            originFloor = Math.floor(Math.random() * numFloors);
+            destinationFloor = Math.floor(Math.random() * numFloors);
+        } while (originFloor === destinationFloor);
+        
+        manifest.push({
+            spawnTime: Math.floor(Math.random() * maxSpawnTime) + 1,
+            originFloor,
+            destinationFloor,
+        });
+    }
+    return manifest
+      .sort((a, b) => a.spawnTime - b.spawnTime)
+      .map((p, i) => ({ ...p, id: i + 1 }));
+};
+
+
 export function ChallengeTwo() {
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
@@ -33,7 +55,9 @@ export function ChallengeTwo() {
   
   const [isBotB, setIsBotB] = useState(false);
 
+  const [selectedScenarioName, setSelectedScenarioName] = useState(passengerScenarios[0].name);
   const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
+  const [shouldStartAfterRandom, setShouldStartAfterRandom] = useState(false);
   
   const { 
     state: simulation, 
@@ -59,6 +83,24 @@ export function ChallengeTwo() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (shouldStartAfterRandom) {
+      start();
+      setShouldStartAfterRandom(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [passengerManifest, shouldStartAfterRandom, start]);
+
+  const handleStartClick = () => {
+    if (selectedScenarioName === '랜덤') {
+      const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
+      setShouldStartAfterRandom(true);
+      setPassengerManifest(randomManifest);
+    } else {
+      start();
+    }
+  };
 
   const handleApplyCode = (
     code: string, 
@@ -146,7 +188,7 @@ export function ChallengeTwo() {
       
       <div className="w-full flex justify-center my-2">
         {stats.winner ? (
-          <Button onClick={start} size="lg">
+          <Button onClick={handleStartClick} size="lg">
             <RefreshCw className="mr-2 h-4 w-4" />
             Restart Competition
           </Button>
@@ -156,7 +198,7 @@ export function ChallengeTwo() {
             Pause Competition
           </Button>
         ) : (
-          <Button onClick={start} size="lg">
+          <Button onClick={handleStartClick} size="lg">
             <Play className="mr-2 h-4 w-4" />
             Start Competition
           </Button>
@@ -291,11 +333,16 @@ export function ChallengeTwo() {
             <div>
               <Label htmlFor="scenario-select-2" className="mb-2 block text-sm font-medium"><UsersRound className="inline-block w-4 h-4 mr-1"/>승객 시나리오 선택</Label>
               <Select
+                  value={selectedScenarioName}
                   onValueChange={(value) => {
-                    const selectedScenario = passengerScenarios.find(s => s.name === value);
-                    if (selectedScenario) setPassengerManifest(selectedScenario.manifest);
+                    setSelectedScenarioName(value);
+                    if (value !== '랜덤') {
+                      const selectedScenario = passengerScenarios.find(s => s.name === value);
+                      if (selectedScenario) setPassengerManifest(selectedScenario.manifest);
+                    } else {
+                      setPassengerManifest([]);
+                    }
                   }}
-                  defaultValue={passengerScenarios[0].name}
               >
                 <SelectTrigger id="scenario-select-2"><SelectValue /></SelectTrigger>
                 <SelectContent>{passengerScenarios.map((s) => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
@@ -308,7 +355,7 @@ export function ChallengeTwo() {
                 </div>
                  <div className="flex items-center justify-between mt-1">
                     <div className="flex items-center gap-2"><Users className="w-4 h-4"/><span>Passengers Left</span></div>
-                    <span className="font-bold">{passengerManifest.length - (stats.passengersServed[0] + stats.passengersServed[1])}</span>
+                    <span className="font-bold">{passengerManifest.length - stats.passengersServed.reduce((a,b) => a+b, 0)}</span>
                 </div>
             </div>
           </div>
