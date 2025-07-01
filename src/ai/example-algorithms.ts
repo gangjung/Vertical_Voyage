@@ -1,66 +1,44 @@
 export const exampleAlgorithms = [
     {
-        name: '기본: 스마트 분배',
-        code: `// 기본 알고리즘: 탑승객 우선, 이후 가장 가까운 호출에 응답합니다.
-// 이 로직은 엘리베이터 수에 상관없이 동작합니다.
+        name: '기본: 최근접 우선',
+        code: `// 기본 알고리즘: 탑승객을 먼저 목적지에 내려주고, 이후 가장 가까운 호출에 응답합니다.
+// 이 로직은 여러 엘리베이터가 같은 호출에 몰려가는 비효율적인 부분이 있습니다.
 function manageElevators(input) {
-  const { elevators, waitingPassengers, numFloors } = input;
-  
+  const { elevators, waitingPassengers } = input;
+
   const commands = elevators.map(elevator => {
-    // 1. 탑승객이 있을 경우, 목적지를 우선으로 처리합니다.
+    // 1. 엘리베이터에 승객이 있을 때: 가장 가까운 목적지로 이동
     if (elevator.passengers.length > 0) {
-      const wantsToGoUp = elevator.passengers.some(p => p.destinationFloor > elevator.floor);
-      const wantsToGoDown = elevator.passengers.some(p => p.destinationFloor < elevator.floor);
+      const closestDest = elevator.passengers.reduce((prev, curr) =>
+        Math.abs(curr.destinationFloor - elevator.floor) < Math.abs(prev.destinationFloor - elevator.floor) ? curr : prev
+      ).destinationFloor;
 
-      if (elevator.direction === 'up') {
-        if (wantsToGoUp) return 'up';
-        if (wantsToGoDown) return 'down';
-      }
-
-      if (elevator.direction === 'down') {
-        if (wantsToGoDown) return 'down';
-        if (wantsToGoUp) return 'up';
-      }
-      
-      if (elevator.direction === 'idle') {
-        if (wantsToGoUp) return 'up';
-        if (wantsToGoDown) return 'down';
-      }
-
-      if (elevator.floor === numFloors - 1 && wantsToGoDown) return 'down';
-      if (elevator.floor === 0 && wantsToGoUp) return 'up';
-      
+      if (closestDest > elevator.floor) return 'up';
+      if (closestDest < elevator.floor) return 'down';
       return 'idle';
     }
 
-    // 2. 탑승객이 없고, 대기 승객이 있는 경우 가장 가까운 호출에 응답합니다.
-    const isAnyoneWaiting = waitingPassengers.some(floor => floor.length > 0);
-    if (isAnyoneWaiting) {
-        let closestFloor = -1;
-        let minDistance = Infinity;
+    // 2. 엘리베이터가 비어있을 때: 가장 가까운 호출에 응답
+    let closestCall = -1;
+    let minDistance = Infinity;
 
-        waitingPassengers.forEach((floor, floorIndex) => {
-            if (floor.length > 0) {
-                const distance = Math.abs(elevator.floor - floorIndex);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestFloor = floorIndex;
-                }
-            }
-        });
-        
-        if (closestFloor !== -1) {
-            if (closestFloor > elevator.floor) {
-                return 'up';
-            } else if (closestFloor < elevator.floor) {
-                return 'down';
-            } else {
-                return 'idle';
-            }
+    waitingPassengers.forEach((floor, floorIndex) => {
+      if (floor.length > 0) {
+        const distance = Math.abs(elevator.floor - floorIndex);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestCall = floorIndex;
         }
+      }
+    });
+
+    if (closestCall !== -1) {
+      if (closestCall > elevator.floor) return 'up';
+      if (closestCall < elevator.floor) return 'down';
+      return 'idle';
     }
-    
-    // 3. 아무도 없으면 유휴 상태로 대기합니다.
+
+    // 3. 호출이 없을 때: 대기
     return 'idle';
   });
 
