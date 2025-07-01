@@ -310,7 +310,7 @@ export function ChallengeTwo() {
                   <p className="mt-1">
                       탑승은 시뮬레이션에 의해 자동으로 처리됩니다. 알고리즘은 다음 조건을 만족시켜야 합니다:
                   </p>
-                  <ul className="list-['-_'] list-inside pl-4 mt-1">
+                  <ul className="list-['-_'] list-inside pl-4 mt-1 space-y-1">
                       <li>엘리베이터가 승객이 기다리는 층에 있어야 합니다.</li>
                       <li>엘리베이터에 빈 자리가 있어야 합니다.</li>
                       <li>
@@ -320,6 +320,15 @@ export function ChallengeTwo() {
                               <li><code className="p-0.5 rounded bg-muted">'down'</code>: 아래로 가려는 승객만 태웁니다.</li>
                               <li><code className="p-0.5 rounded bg-muted">'idle'</code>: 방향에 상관없이 대기 중인 승객을 태웁니다. (가장 안전한 탑승 전략)</li>
                           </ul>
+                      </li>
+                      <li>
+                        <span className="font-semibold">예시 코드:</span>
+                        <pre className="bg-muted p-2 rounded-md mt-1 text-xs text-foreground font-mono">
+{`// 현재 층에 호출이 있으면 'idle'을 반환하여 승객을 태웁니다.
+if (input.waitingCalls[input.myElevator.floor]) {
+  return 'idle'; 
+}`}
+                        </pre>
                       </li>
                   </ul>
               </div>
