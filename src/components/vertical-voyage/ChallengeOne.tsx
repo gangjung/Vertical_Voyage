@@ -32,32 +32,7 @@ const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
 export function ChallengeOne() {
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
-  const [code, setCode] = useState(
-    `// 엘리베이터가 한 명의 승객만 따라다니는 매우 간단한 기본 알고리즘입니다.
-// 이 코드를 수정하거나, 예시를 선택하여 더 효율적인 알고리즘을 만들어보세요!
-function manageElevators(input) {
-  const { elevators } = input;
-
-  const commands = elevators.map(elevator => {
-    // 1. 만약 엘리베이터에 승객이 있다면,
-    if (elevator.passengers.length > 0) {
-      const firstPassenger = elevator.passengers[0];
-      // 첫 번째 승객의 목적지로 이동합니다. (매우 비효율적!)
-      if (firstPassenger.destinationFloor > elevator.floor) {
-        return 'up';
-      }
-      if (firstPassenger.destinationFloor < elevator.floor) {
-        return 'down';
-      }
-    }
-    
-    // 2. 승객이 없거나 목적지에 도착했다면, 그냥 멈춥니다.
-    return 'idle';
-  });
-
-  return commands;
-}`
-  );
+  const [code, setCode] = useState(exampleAlgorithms[0].code);
   const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(() => defaultManageElevators);
   
   const [selectedScenarioName, setSelectedScenarioName] = useState(passengerScenarios[0].name);
@@ -443,7 +418,7 @@ function manageElevators(input) {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="function manageElevators(input) { ... }"
-              className="font-mono bg-background/50 h-56 text-xs"
+              className="font-mono bg-background/50 h-80 text-xs"
             />
           </CardContent>
           <CardFooter>

@@ -235,7 +235,7 @@ export function ChallengeTwo() {
                       {exampleCompetitionAlgorithms.map(a => <SelectItem key={a.name} value={a.name} disabled={a.isBot}>{a.name}</SelectItem>)}
                   </SelectContent>
               </Select>
-              <Textarea value={codeA} onChange={e => setCodeA(e.target.value)} className="font-mono h-40 text-xs mt-2" placeholder="function manageElevator(input) { ... }"/>
+              <Textarea value={codeA} onChange={e => setCodeA(e.target.value)} className="font-mono h-64 text-xs mt-2" placeholder="function manageElevator(input) { ... }"/>
           </CardContent>
           <CardFooter>
               <Button onClick={() => handleApplyCodeA()} className="w-full bg-blue-600 hover:bg-blue-700"><Code className="mr-2 h-4 w-4"/>Apply Algorithm A</Button>
@@ -288,7 +288,7 @@ export function ChallengeTwo() {
                     setCodeB(e.target.value);
                     setIsBotB(false);
                 }}
-                className="font-mono h-40 text-xs mt-2" 
+                className="font-mono h-64 text-xs mt-2" 
                 placeholder="function manageElevator(input) { ... }"
                 readOnly={isBotB}
               />
