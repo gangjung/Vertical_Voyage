@@ -101,6 +101,18 @@ export function ChallengeTwo() {
   const handleApplyCodeA = (isInitial:boolean = false) => handleApplyCode(codeA, setAlgorithmA, '알고리즘 A', isInitial);
   const handleApplyCodeB = (isInitial:boolean = false) => handleApplyCode(codeB, setAlgorithmB, '알고리즘 B', isInitial);
 
+  // --- Stat Comparison Logic ---
+  const servedA = stats.passengersServed[0];
+  const servedB = stats.passengersServed[1];
+  const distA = stats.distanceTraveled[0];
+  const distB = stats.distanceTraveled[1];
+
+  const isServedAWinning = servedA > servedB;
+  const isServedBWinning = servedB > servedA;
+  const isDistAWinning = distA < distB;
+  const isDistBWinning = distB < distA;
+
+
   if (!isClient) {
     return (
       <div className="flex flex-col items-center justify-center bg-background p-2 sm:p-4">
@@ -184,11 +196,11 @@ export function ChallengeTwo() {
               <div className="grid grid-cols-2 gap-2 text-sm mb-4">
                   <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30">
                       <div className="flex items-center gap-2 text-muted-foreground"><Users className="w-4 h-4"/><span>Served</span></div>
-                      <span className="font-bold">{stats.passengersServed[0]}</span>
+                      <span className={cn("font-bold", isServedAWinning && "text-accent")}>{servedA}</span>
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30">
                       <div className="flex items-center gap-2 text-muted-foreground"><Route className="w-4 h-4"/><span>Distance</span></div>
-                      <span className="font-bold">{stats.distanceTraveled[0]}</span>
+                      <span className={cn("font-bold", isDistAWinning && "text-accent")}>{distA}</span>
                   </div>
               </div>
               <Label htmlFor="algo-a-select" className="mb-2 block text-sm font-medium"><Code className="inline-block w-4 h-4 mr-1"/>알고리즘 예시 선택</Label>
@@ -217,11 +229,11 @@ export function ChallengeTwo() {
               <div className="grid grid-cols-2 gap-2 text-sm mb-4">
                   <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30">
                       <div className="flex items-center gap-2 text-muted-foreground"><Users className="w-4 h-4"/><span>Served</span></div>
-                      <span className="font-bold">{stats.passengersServed[1]}</span>
+                      <span className={cn("font-bold", isServedBWinning && "text-accent")}>{servedB}</span>
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30">
                       <div className="flex items-center gap-2 text-muted-foreground"><Route className="w-4 h-4"/><span>Distance</span></div>
-                      <span className="font-bold">{stats.distanceTraveled[1]}</span>
+                      <span className={cn("font-bold", isDistBWinning && "text-accent")}>{distB}</span>
                   </div>
               </div>
               <Label htmlFor="algo-b-select" className="mb-2 block text-sm font-medium"><Code className="inline-block w-4 h-4 mr-1"/>알고리즘 예시 선택</Label>
@@ -275,7 +287,7 @@ export function ChallengeTwo() {
               <li><span className="font-bold text-foreground">승리 조건:</span> 1순위 - 더 많은 승객 수송. 2순위(동점 시) - 더 적은 이동 거리.</li>
               <li><span className="font-bold text-foreground">정보 제한:</span> 알고리즘은 각 층에 호출이 있는지(`true/false`)만 알 수 있으며, 대기 승객 수나 목적지 정보는 알 수 없습니다.</li>
               <li><span className="font-bold text-foreground">동시 도착:</span> 두 엘리베이터가 같은 층에 동시에 도착하면, 대기 중인 승객은 랜덤하게 나뉘어 탑승합니다.</li>
-              <li><span className="font-bold text-foreground">호출 신호 변경:</span> 층의 호출 신호는 승객이 나타나면 `true`가 되며, 해당 층의 마지막 대기 승객이 탑승한 직후 `false`로 바뀝니다.</li>
+              <li><span className="font-bold text-foreground">호출 신호 변경:</span> 층의 호출 신호는 승객이 나타나면 `true`가 되며, 해당 층의 마지막 대기 승객이 탑승한 직후 `false`로 바뀝니다. 이 변경 사항은 다음 스텝에 반영됩니다.</li>
             </ul>
           </div>
           <div>
@@ -310,7 +322,7 @@ export function ChallengeTwo() {
                   <p className="mt-1">
                       탑승은 시뮬레이션에 의해 자동으로 처리됩니다. 알고리즘은 다음 조건을 만족시켜야 합니다:
                   </p>
-                  <ul className="list-['-_'] list-inside pl-4 mt-1 space-y-1">
+                  <ul className="list-['-_'] list-inside pl-4 mt-1 space-y-1 text-xs">
                       <li>엘리베이터가 승객이 기다리는 층에 있어야 합니다.</li>
                       <li>엘리베이터에 빈 자리가 있어야 합니다.</li>
                       <li>
