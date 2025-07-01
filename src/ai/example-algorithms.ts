@@ -2,7 +2,7 @@ export const exampleAlgorithms = [
     {
         name: '기본: 최근접 우선',
         code: `// 기본 알고리즘: 탑승객을 먼저 목적지에 내려주고, 이후 가장 가까운 호출에 응답합니다.
-// 이 로직은 여러 엘리베이터가 같은 호출에 몰려가는 비효율적인 부분이 있습니다.
+// 약점: 여러 엘리베이터가 같은 호출에 몰려가는 비효율적인 문제가 있습니다.
 function manageElevators(input) {
   const { elevators, waitingPassengers } = input;
 
@@ -47,7 +47,8 @@ function manageElevators(input) {
     },
     {
         name: '구역 분할 전략',
-        code: `// 구역 분할 전략: 엘리베이터 절반은 저층, 절반은 고층을 담당합니다.
+        code: `// 구역 분할 전략: 엘리베이터 절반은 저층, 절반은 고층을 담당하여 분산시킵니다.
+// 약점: 특정 구역에만 호출이 몰릴 경우, 다른 구역의 엘리베이터는 비효율적으로 대기하게 될 수 있습니다.
 function manageElevators(input) {
     const { elevators, waitingPassengers, numFloors } = input;
     const midFloor = Math.floor(numFloors / 2);
@@ -84,7 +85,7 @@ function manageElevators(input) {
             return 'idle'; // 대기 승객 층 도착
         }
         
-        // 3. 할 일이 없으면 구역의 중앙으로 이동
+        // 3. 할 일이 없으면 구역의 중앙으로 이동하여 대기
         const baseFloor = isLowerZone 
             ? Math.floor(midFloor / 2) 
             : midFloor + Math.floor((numFloors - midFloor) / 2);
@@ -106,6 +107,7 @@ function manageElevators(input) {
     {
         name: '홀/짝수층 전략',
         code: `// 홀/짝수층 전략: 엘리베이터를 홀수층 담당과 짝수층 담당으로 나눕니다.
+// 약점: 홀수층과 짝수층 간의 이동이 많은 시나리오에서는 동선이 비효율적일 수 있습니다.
 function manageElevators(input) {
     const { elevators, waitingPassengers } = input;
 
@@ -187,6 +189,7 @@ export const exampleCompetitionAlgorithms = [
         name: '기본: 최근접 우선',
         isBot: false,
         code: `// 챌린지 2 기본 알고리즘: 탑승객의 가장 가까운 목적지로 이동하고, 없으면 가장 가까운 호출에 응답합니다.
+// 약점: 엘리베이터의 현재 이동 방향을 고려하지 않아 비효율적인 방향 전환이 발생할 수 있습니다.
 /*
  * @param {object} input - 시뮬레이션 상태 데이터
  * @param {object} input.myElevator - 내 엘리베이터 상태 (floor, passengers 등)
@@ -235,6 +238,7 @@ function manageElevator(input) {
         name: '공격적: 항상 위로',
         isBot: false,
         code: `// 챌린지 2 예시: 항상 위쪽 호출을 먼저 확인하는 공격적인 알고리즘
+// 약점: '아침 출근'처럼 위로 가는 수요가 많을 때 유리하지만, 다른 상황에서는 아래쪽 호출을 무시하여 비효율적일 수 있습니다.
 /*
  * @param {object} input - 시뮬레이션 상태 데이터
  * @param {object} input.myElevator - 내 엘리베이터 상태 (floor, passengers 등)
