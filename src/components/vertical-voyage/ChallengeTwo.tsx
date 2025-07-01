@@ -74,7 +74,7 @@ export function ChallengeTwo() {
        reset();
        setTimeout(() => {
          if (selectedScenarioName === '랜덤') {
-            const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
+            const randomManifest = generateRandomManifest(NUM_FLOORS, 40, 136);
             setPassengerManifest(randomManifest);
             setShouldStartAfterRandom(true);
           } else {
@@ -83,7 +83,7 @@ export function ChallengeTwo() {
        }, 50);
     } else {
       if (selectedScenarioName === '랜덤' && passengerManifest.length === 0) {
-        const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
+        const randomManifest = generateRandomManifest(NUM_FLOORS, 40, 136);
         setPassengerManifest(randomManifest);
         setShouldStartAfterRandom(true);
       } else {

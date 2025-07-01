@@ -14,7 +14,7 @@ import { Users, Footprints, Code, Play, Trophy, Clock, Route, Milestone, Timer, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exampleAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
-import { passengerScenarios, passengerScenarios100, generateRandomManifest } from '@/ai/passenger-scenarios';
+import { passengerScenarios, passengerScenarios80, generateRandomManifest } from '@/ai/passenger-scenarios';
 import type { PassengerManifest } from '@/ai/passenger-scenarios';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -33,7 +33,7 @@ export function ChallengeOne() {
   const { toast } = useToast();
   
   const [numElevators, setNumElevators] = useState(2);
-  const currentScenarios = numElevators === 4 ? passengerScenarios100 : passengerScenarios;
+  const currentScenarios = numElevators === 4 ? passengerScenarios80 : passengerScenarios;
 
   const [code, setCode] = useState(exampleAlgorithms[0].code);
   const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(null);
@@ -43,7 +43,7 @@ export function ChallengeOne() {
   const [shouldStartAfterRandom, setShouldStartAfterRandom] = useState(false);
 
   useEffect(() => {
-    const newScenarios = numElevators === 4 ? passengerScenarios100 : passengerScenarios;
+    const newScenarios = numElevators === 4 ? passengerScenarios80 : passengerScenarios;
     const newDefaultScenario = newScenarios[0];
     
     setSelectedScenarioName(newDefaultScenario.name);
@@ -87,8 +87,8 @@ export function ChallengeOne() {
        reset();
        setTimeout(() => {
          if (selectedScenarioName === '랜덤') {
-            const numPassengers = numElevators === 4 ? 100 : 50;
-            const maxSpawnTime = numElevators === 4 ? 340 : 170;
+            const numPassengers = numElevators === 4 ? 80 : 40;
+            const maxSpawnTime = numElevators === 4 ? 272 : 136;
             const randomManifest = generateRandomManifest(NUM_FLOORS, numPassengers, maxSpawnTime);
             setPassengerManifest(randomManifest);
             setShouldStartAfterRandom(true);
@@ -98,8 +98,8 @@ export function ChallengeOne() {
        }, 50);
     } else {
       if (selectedScenarioName === '랜덤' && passengerManifest.length === 0) {
-        const numPassengers = numElevators === 4 ? 100 : 50;
-        const maxSpawnTime = numElevators === 4 ? 340 : 170;
+        const numPassengers = numElevators === 4 ? 80 : 40;
+        const maxSpawnTime = numElevators === 4 ? 272 : 136;
         const randomManifest = generateRandomManifest(NUM_FLOORS, numPassengers, maxSpawnTime);
         setPassengerManifest(randomManifest);
         setShouldStartAfterRandom(true);
@@ -320,8 +320,8 @@ export function ChallengeOne() {
                     <SelectValue placeholder="엘리베이터 수를 선택하세요" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="2">2대 (승객 50명)</SelectItem>
-                    <SelectItem value="4">4대 (승객 100명)</SelectItem>
+                    <SelectItem value="2">2대 (승객 40명)</SelectItem>
+                    <SelectItem value="4">4대 (승객 80명)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
