@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { Users, Footprints, Code, Play, Trophy, Clock, Route, Milestone, Timer, UsersRound, Settings, Building } from 'lucide-react';
+import { Users, Footprints, Code, Play, Trophy, Clock, Route, Milestone, Timer, UsersRound, Settings, Building, Pause, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exampleAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
@@ -35,7 +35,14 @@ export function ChallengeOne() {
   const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
   const [numElevators, setNumElevators] = useState(4);
 
-  const { state: simulation, stats } = useElevatorSimulation(
+  const { 
+    state: simulation, 
+    stats,
+    isRunning,
+    start,
+    pause,
+    reset
+  } = useElevatorSimulation(
     NUM_FLOORS, 
     ELEVATOR_CAPACITY,
     numElevators,
@@ -79,11 +86,12 @@ export function ChallengeOne() {
       }
       
       setCustomAlgorithm(() => newAlgorithm as any);
+      reset(); // Reset the simulation state, but don't start it.
 
       if (!isInitialLoad) {
         toast({
           title: "성공!",
-          description: "새로운 알고리즘이 적용되었습니다. 시뮬레이션이 재시작됩니다.",
+          description: "새로운 알고리즘이 적용되었습니다. '시작' 버튼을 눌러 시뮬레이션을 실행하세요.",
         });
       }
     } catch (e) {
@@ -337,11 +345,28 @@ export function ChallengeOne() {
               className="font-mono bg-background/50 h-56 text-xs"
             />
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
             <Button onClick={() => handleApplyCode(false)} className="w-full sm:w-auto">
-              <Play className="mr-2 h-4 w-4" />
-              Apply and Restart Simulation
+              <Code className="mr-2 h-4 w-4" />
+              Apply Algorithm
             </Button>
+            <div className="flex-grow" />
+            {stats.totalOperatingTime > 0 ? (
+              <Button onClick={start} className="w-full sm:w-auto">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Restart Simulation
+              </Button>
+            ) : isRunning ? (
+              <Button onClick={pause} variant="secondary" className="w-full sm:w-auto">
+                <Pause className="mr-2 h-4 w-4" />
+                Pause Simulation
+              </Button>
+            ) : (
+              <Button onClick={start} className="w-full sm:w-auto">
+                <Play className="mr-2 h-4 w-4" />
+                Start Simulation
+              </Button>
+            )}
           </CardFooter>
        </Card>
       

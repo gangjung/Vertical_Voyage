@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { Users, Footprints, Code, Play, Trophy, Route, Timer, UsersRound, Bot, Star } from 'lucide-react';
+import { Users, Footprints, Code, Play, Trophy, Route, Timer, UsersRound, Bot, Pause, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exampleCompetitionAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
@@ -32,7 +32,14 @@ export function ChallengeTwo() {
 
   const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
   
-  const { state: simulation, stats } = useElevatorCompetition(
+  const { 
+    state: simulation, 
+    stats,
+    isRunning,
+    start,
+    pause,
+    reset
+  } = useElevatorCompetition(
     NUM_FLOORS, 
     ELEVATOR_CAPACITY,
     passengerManifest,
@@ -71,11 +78,12 @@ export function ChallengeTwo() {
       newAlgorithm({ myElevator: testElevator, waitingCalls: Array(NUM_FLOORS).fill(false), numFloors: NUM_FLOORS, elevatorCapacity: ELEVATOR_CAPACITY, currentTime: 0 });
       
       setter(() => newAlgorithm as any);
+      reset();
 
       if (!isInitialLoad) {
         toast({
           title: "성공!",
-          description: `${algoName} 알고리즘이 적용되었습니다. 시뮬레이션이 재시작됩니다.`,
+          description: `${algoName} 알고리즘이 적용되었습니다. '시작' 버튼을 눌러 대결을 시작하세요.`,
         });
       }
     } catch (e) {
@@ -118,6 +126,25 @@ export function ChallengeTwo() {
         </CardContent>
       </Card>
       
+      <div className="w-full flex justify-center my-2">
+        {stats.winner ? (
+          <Button onClick={start} size="lg">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Restart Competition
+          </Button>
+        ) : isRunning ? (
+          <Button onClick={pause} variant="secondary" size="lg">
+            <Pause className="mr-2 h-4 w-4" />
+            Pause Competition
+          </Button>
+        ) : (
+          <Button onClick={start} size="lg">
+            <Play className="mr-2 h-4 w-4" />
+            Start Competition
+          </Button>
+        )}
+      </div>
+
       {stats.winner && (
         <Card className="w-full shadow-lg border-2 border-accent animate-fadeIn">
           <CardHeader className="text-center pb-3 pt-4">
@@ -173,7 +200,7 @@ export function ChallengeTwo() {
               <Textarea value={codeA} onChange={e => setCodeA(e.target.value)} className="font-mono h-40 text-xs mt-2" placeholder="function manageElevator(input) { ... }"/>
           </CardContent>
           <CardFooter>
-              <Button onClick={() => handleApplyCodeA()} className="w-full bg-blue-600 hover:bg-blue-700"><Play className="mr-2 h-4 w-4"/>Apply Algorithm A</Button>
+              <Button onClick={() => handleApplyCodeA()} className="w-full bg-blue-600 hover:bg-blue-700"><Code className="mr-2 h-4 w-4"/>Apply Algorithm A</Button>
           </CardFooter>
         </Card>
 
@@ -206,7 +233,7 @@ export function ChallengeTwo() {
               <Textarea value={codeB} onChange={e => setCodeB(e.target.value)} className="font-mono h-40 text-xs mt-2" placeholder="function manageElevator(input) { ... }"/>
           </CardContent>
           <CardFooter>
-              <Button onClick={() => handleApplyCodeB()} className="w-full bg-red-600 hover:bg-red-700"><Play className="mr-2 h-4 w-4"/>Apply Algorithm B</Button>
+              <Button onClick={() => handleApplyCodeB()} className="w-full bg-red-600 hover:bg-red-700"><Code className="mr-2 h-4 w-4"/>Apply Algorithm B</Button>
           </CardFooter>
         </Card>
       </div>

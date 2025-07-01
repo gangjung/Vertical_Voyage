@@ -40,7 +40,6 @@ export interface CompetitionStats {
 
 // --- CONSTANTS ---
 const TICK_INTERVAL_MS = 1000;
-const NUM_ELEVATORS = 2;
 
 // --- MAIN HOOK ---
 export function useElevatorCompetition(
@@ -50,6 +49,7 @@ export function useElevatorCompetition(
   algorithmA?: (input: CompetitionAlgorithmInput) => ElevatorCommand,
   algorithmB?: (input: CompetitionAlgorithmInput) => ElevatorCommand
 ) {
+  const [isRunning, setIsRunning] = useState(false);
 
   const getInitialState = useCallback(() => {
     return {
@@ -73,17 +73,10 @@ export function useElevatorCompetition(
   const [simulation, setSimulation] = useState(getInitialState());
   const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    setSimulation(getInitialState());
-  }, [algorithmA, algorithmB, passengerManifest, getInitialState]);
-
   const tick = useCallback(() => {
-    if (simulation.stats.winner) {
-      if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
-      return;
-    }
-
     setSimulation(prev => {
+      if (prev.stats.winner) return prev;
+
       let { state: prevState, stats: prevStats } = prev;
       const currentTime = prevState.currentTime + 1;
       const manageA = algorithmA || defaultManageElevator;
@@ -190,15 +183,58 @@ export function useElevatorCompetition(
         stats: newStats
       };
     });
-  }, [simulation.stats.winner, algorithmA, algorithmB, passengerManifest, numFloors, elevatorCapacity]);
+  }, [algorithmA, algorithmB, passengerManifest, numFloors, elevatorCapacity]);
+  
+  const start = () => {
+    if (simulation.stats.winner) {
+      reset();
+      setTimeout(() => setIsRunning(true), 50);
+    } else {
+      setIsRunning(true);
+    }
+  };
 
+  const pause = () => {
+    setIsRunning(false);
+  };
+
+  const reset = useCallback(() => {
+    setIsRunning(false);
+    if (simulationIntervalRef.current) {
+      clearInterval(simulationIntervalRef.current);
+      simulationIntervalRef.current = null;
+    }
+    setSimulation(getInitialState());
+  }, [getInitialState]);
+
+  // Reset when main parameters change
   useEffect(() => {
-    if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
-    simulationIntervalRef.current = setInterval(tick, TICK_INTERVAL_MS);
-    return () => {
-      if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
-    };
-  }, [tick]);
+    reset();
+  }, [algorithmA, algorithmB, passengerManifest, reset]);
 
-  return simulation;
+  // Main timer effect
+  useEffect(() => {
+    if (isRunning) {
+      simulationIntervalRef.current = setInterval(tick, TICK_INTERVAL_MS);
+    } else {
+      if (simulationIntervalRef.current) {
+        clearInterval(simulationIntervalRef.current);
+      }
+    }
+    return () => {
+      if (simulationIntervalRef.current) {
+        clearInterval(simulationIntervalRef.current);
+      }
+    };
+  }, [isRunning, tick]);
+
+  // Stop simulation if finished
+  useEffect(() => {
+    if (simulation.stats.winner) {
+      setIsRunning(false);
+    }
+  }, [simulation.stats.winner]);
+
+
+  return { ...simulation, isRunning, start, pause, reset };
 }

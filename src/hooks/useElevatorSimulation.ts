@@ -120,7 +120,8 @@ export function useElevatorSimulation(
   numElevators: number,
   passengerManifest: PassengerManifest,
   customManageElevators?: (input: AlgorithmInput) => ElevatorCommand[]
-): { state: SimulationState, stats: Stats } {
+) {
+  const [isRunning, setIsRunning] = useState(false);
 
   const getInitialState = useCallback(() => {
     return {
@@ -153,22 +154,13 @@ export function useElevatorSimulation(
 
   const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Effect to reset the simulation when the algorithm or parameters change
-  useEffect(() => {
-    setSimulation(getInitialState());
-  }, [customManageElevators, numFloors, elevatorCapacity, numElevators, getInitialState, passengerManifest]);
-
-
   const tick = useCallback(() => {
-    // Stop the simulation if it's finished
-    if (simulation.stats.totalOperatingTime > 0) {
-        if (simulationIntervalRef.current) {
-            clearInterval(simulationIntervalRef.current);
-        }
-        return;
-    }
-
     setSimulation(prevSimulation => {
+      // Prevent one last tick after finishing
+      if (prevSimulation.stats.totalOperatingTime > 0) {
+        return prevSimulation;
+      }
+
       const prevState = prevSimulation.state;
       const prevStats = prevSimulation.stats;
       const currentTime = prevState.currentTime + 1;
@@ -273,19 +265,59 @@ export function useElevatorSimulation(
         }
       };
     });
-  }, [numFloors, elevatorCapacity, customManageElevators, defaultManageElevators, simulation.stats.totalOperatingTime, passengerManifest, numElevators]);
+  }, [numFloors, elevatorCapacity, customManageElevators, passengerManifest, numElevators]);
+  
+  const start = () => {
+    if (simulation.stats.totalOperatingTime > 0) {
+      reset();
+      // Need to start after reset has taken effect.
+      // A small timeout is a simple way to achieve this.
+      setTimeout(() => setIsRunning(true), 50);
+    } else {
+      setIsRunning(true);
+    }
+  };
 
-  useEffect(() => {
+  const pause = () => {
+    setIsRunning(false);
+  };
+  
+  const reset = useCallback(() => {
+    setIsRunning(false);
     if (simulationIntervalRef.current) {
       clearInterval(simulationIntervalRef.current);
+      simulationIntervalRef.current = null;
     }
-    simulationIntervalRef.current = setInterval(tick, TICK_INTERVAL_MS);
+    setSimulation(getInitialState());
+  }, [getInitialState]);
+
+  // Effect to reset the simulation when the algorithm or parameters change
+  useEffect(() => {
+    reset();
+  }, [customManageElevators, numFloors, elevatorCapacity, numElevators, passengerManifest, reset]);
+
+  // Main timer effect
+  useEffect(() => {
+    if (isRunning) {
+      simulationIntervalRef.current = setInterval(tick, TICK_INTERVAL_MS);
+    } else {
+      if (simulationIntervalRef.current) {
+        clearInterval(simulationIntervalRef.current);
+      }
+    }
     return () => {
       if (simulationIntervalRef.current) {
         clearInterval(simulationIntervalRef.current);
       }
     };
-  }, [tick]);
+  }, [isRunning, tick]);
 
-  return simulation;
+  // When simulation finishes, stop it
+  useEffect(() => {
+    if (simulation.stats.totalOperatingTime > 0) {
+      setIsRunning(false);
+    }
+  }, [simulation.stats.totalOperatingTime]);
+  
+  return { ...simulation, isRunning, start, pause, reset };
 }
