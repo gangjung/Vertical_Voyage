@@ -14,7 +14,7 @@ import { Users, Footprints, Code, Play, Trophy, Route, Timer, UsersRound, Bot, P
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exampleCompetitionAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
-import { generateRandomManifest, passengerScenarios } from '@/ai/passenger-scenarios';
+import { generateRandomManifest, passengerScenarios50 } from '@/ai/passenger-scenarios';
 import type { PassengerManifest } from '@/ai/passenger-scenarios';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -35,8 +35,8 @@ export function ChallengeTwo() {
   
   const [isBotB, setIsBotB] = useState(false);
 
-  const [selectedScenarioName, setSelectedScenarioName] = useState(passengerScenarios[0].name);
-  const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
+  const [selectedScenarioName, setSelectedScenarioName] = useState(passengerScenarios50[0].name);
+  const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios50[0].manifest);
   const [shouldStartAfterRandom, setShouldStartAfterRandom] = useState(false);
   
   const { 
@@ -74,7 +74,7 @@ export function ChallengeTwo() {
        reset();
        setTimeout(() => {
          if (selectedScenarioName === '랜덤') {
-            const randomManifest = generateRandomManifest(NUM_FLOORS, 40, 136);
+            const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
             setPassengerManifest(randomManifest);
             setShouldStartAfterRandom(true);
           } else {
@@ -83,7 +83,7 @@ export function ChallengeTwo() {
        }, 50);
     } else {
       if (selectedScenarioName === '랜덤' && passengerManifest.length === 0) {
-        const randomManifest = generateRandomManifest(NUM_FLOORS, 40, 136);
+        const randomManifest = generateRandomManifest(NUM_FLOORS, 50, 170);
         setPassengerManifest(randomManifest);
         setShouldStartAfterRandom(true);
       } else {
@@ -105,7 +105,9 @@ export function ChallengeTwo() {
     }
 
     try {
-      const manageElevatorFunc = new Function('input', code);
+      const manageElevatorFunc = new Function('input', `
+        ${code}
+      `);
 
 
       const testElevator = { id: 1, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 };
@@ -237,7 +239,10 @@ export function ChallengeTwo() {
                   </div>
               </div>
               <Label htmlFor="algo-a-select" className="mb-2 block text-sm font-medium"><Code className="inline-block w-4 h-4 mr-1"/>알고리즘 예시 선택</Label>
-              <Select onValueChange={v => setCodeA(exampleCompetitionAlgorithms.find(a => a.name === v)?.code || '')} defaultValue={exampleCompetitionAlgorithms[0].name}>
+              <Select onValueChange={v => {
+                    const selectedAlgo = exampleCompetitionAlgorithms.find(a => a.name === v);
+                    if (selectedAlgo) setCodeA(selectedAlgo.code);
+                }} defaultValue={exampleCompetitionAlgorithms[0].name}>
                   <SelectTrigger id="algo-a-select"><SelectValue/></SelectTrigger>
                   <SelectContent>
                       {exampleCompetitionAlgorithms.filter(a => !a.isBot).map(a => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
@@ -323,7 +328,7 @@ export function ChallengeTwo() {
                   value={selectedScenarioName}
                   onValueChange={(value) => {
                     setSelectedScenarioName(value);
-                    const selectedScenario = passengerScenarios.find(s => s.name === value);
+                    const selectedScenario = passengerScenarios50.find(s => s.name === value);
                     if (selectedScenario) {
                       setPassengerManifest(selectedScenario.manifest); // This will include the empty array for '랜덤'
                       reset();
@@ -331,7 +336,7 @@ export function ChallengeTwo() {
                   }}
               >
                 <SelectTrigger id="scenario-select-2"><SelectValue /></SelectTrigger>
-                <SelectContent>{passengerScenarios.map((s) => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{passengerScenarios50.map((s) => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
              <div className="p-2 rounded-lg bg-secondary/30 text-sm">
