@@ -1,3 +1,4 @@
+
 // components/vertical-voyage/ChallengeTwo.tsx
 "use client";
 
@@ -245,7 +246,7 @@ export function ChallengeTwo() {
         <CardContent className="border-t pt-4 text-sm text-muted-foreground space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="scenario-select" className="mb-2 block text-sm font-medium"><UsersRound className="inline-block w-4 h-4 mr-1"/>승객 시나리오 선택</Label>
+              <Label htmlFor="scenario-select-2" className="mb-2 block text-sm font-medium"><UsersRound className="inline-block w-4 h-4 mr-1"/>승객 시나리오 선택</Label>
               <Select
                   onValueChange={(value) => {
                     const selectedScenario = passengerScenarios.find(s => s.name === value);
@@ -253,7 +254,7 @@ export function ChallengeTwo() {
                   }}
                   defaultValue={passengerScenarios[0].name}
               >
-                <SelectTrigger id="scenario-select"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="scenario-select-2"><SelectValue /></SelectTrigger>
                 <SelectContent>{passengerScenarios.map((s) => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
@@ -274,6 +275,7 @@ export function ChallengeTwo() {
               <li><span className="font-bold text-foreground">승리 조건:</span> 1순위 - 더 많은 승객 수송. 2순위(동점 시) - 더 적은 이동 거리.</li>
               <li><span className="font-bold text-foreground">정보 제한:</span> 알고리즘은 각 층에 호출이 있는지(`true/false`)만 알 수 있으며, 대기 승객 수나 목적지 정보는 알 수 없습니다.</li>
               <li><span className="font-bold text-foreground">동시 도착:</span> 두 엘리베이터가 같은 층에 동시에 도착하면, 대기 중인 승객은 랜덤하게 나뉘어 탑승합니다.</li>
+              <li><span className="font-bold text-foreground">호출 신호 변경:</span> 층의 호출 신호는 승객이 나타나면 `true`가 되며, 해당 층의 마지막 대기 승객이 탑승한 직후 `false`로 바뀝니다.</li>
             </ul>
           </div>
           <div>
