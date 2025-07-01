@@ -194,13 +194,13 @@ export function ChallengeTwo() {
           </CardHeader>
           <CardContent className="border-t pt-4">
               <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30">
+                  <div className={cn("flex items-center justify-between p-2 rounded-lg bg-secondary/30 transition-colors", isServedAWinning && "bg-blue-200 dark:bg-blue-500/30")}>
                       <div className="flex items-center gap-2 text-muted-foreground"><Users className="w-4 h-4"/><span>Served</span></div>
-                      <span className={cn("font-bold", isServedAWinning && "text-accent")}>{servedA}</span>
+                      <span className="font-bold">{servedA}</span>
                   </div>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30">
+                  <div className={cn("flex items-center justify-between p-2 rounded-lg bg-secondary/30 transition-colors", isDistAWinning && "bg-blue-200 dark:bg-blue-500/30")}>
                       <div className="flex items-center gap-2 text-muted-foreground"><Route className="w-4 h-4"/><span>Distance</span></div>
-                      <span className={cn("font-bold", isDistAWinning && "text-accent")}>{distA}</span>
+                      <span className="font-bold">{distA}</span>
                   </div>
               </div>
               <Label htmlFor="algo-a-select" className="mb-2 block text-sm font-medium"><Code className="inline-block w-4 h-4 mr-1"/>알고리즘 예시 선택</Label>
@@ -227,13 +227,13 @@ export function ChallengeTwo() {
           </CardHeader>
           <CardContent className="border-t pt-4">
               <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30">
+                  <div className={cn("flex items-center justify-between p-2 rounded-lg bg-secondary/30 transition-colors", isServedBWinning && "bg-red-200 dark:bg-red-500/30")}>
                       <div className="flex items-center gap-2 text-muted-foreground"><Users className="w-4 h-4"/><span>Served</span></div>
-                      <span className={cn("font-bold", isServedBWinning && "text-accent")}>{servedB}</span>
+                      <span className="font-bold">{servedB}</span>
                   </div>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30">
+                  <div className={cn("flex items-center justify-between p-2 rounded-lg bg-secondary/30 transition-colors", isDistBWinning && "bg-red-200 dark:bg-red-500/30")}>
                       <div className="flex items-center gap-2 text-muted-foreground"><Route className="w-4 h-4"/><span>Distance</span></div>
-                      <span className={cn("font-bold", isDistBWinning && "text-accent")}>{distB}</span>
+                      <span className="font-bold">{distB}</span>
                   </div>
               </div>
               <Label htmlFor="algo-b-select" className="mb-2 block text-sm font-medium"><Code className="inline-block w-4 h-4 mr-1"/>알고리즘 예시 선택</Label>
