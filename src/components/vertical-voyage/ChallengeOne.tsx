@@ -32,7 +32,7 @@ const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
 export function ChallengeOne() {
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
-  const [code, setCode] = useState(exampleAlgorithms[0].code.replace(/^function manageElevators\(input\) \{|\}$/g, ''));
+  const [code, setCode] = useState(exampleAlgorithms[0].code);
   const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(null);
   
   const [selectedScenarioName, setSelectedScenarioName] = useState(passengerScenarios[0].name);
@@ -100,14 +100,7 @@ export function ChallengeOne() {
     }
 
     try {
-      const fullCode = `
-        function manageElevators(input) {
-          ${code}
-        }
-        return manageElevators;
-      `;
-      const manageElevatorsFunc = new Function(fullCode)();
-
+      const manageElevatorsFunc = new Function('input', code);
 
       const testElevators = Array.from({ length: numElevators }, (_, i) => ({
         id: i + 1,
@@ -121,7 +114,7 @@ export function ChallengeOne() {
          throw new Error(`함수는 ${numElevators}대의 엘리베이터에 대한 명령어 배열을 반환해야 합니다.`);
       }
       
-      setCustomAlgorithm(() => manageElevatorsFunc);
+      setCustomAlgorithm(() => manageElevatorsFunc as any);
       reset(); // Reset the simulation state, but don't start it.
 
       if (!isInitialLoad) {
@@ -331,7 +324,7 @@ export function ChallengeOne() {
                   onValueChange={(value) => {
                     const selectedAlgo = exampleAlgorithms.find(algo => algo.name === value);
                     if (selectedAlgo) {
-                      setCode(selectedAlgo.code.replace(/^function manageElevators\(input\) \{|\}$/g, ''));
+                      setCode(selectedAlgo.code);
                     }
                   }}
                 >
@@ -438,8 +431,8 @@ export function ChallengeOne() {
             <Textarea
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="function manageElevators(input) { ... }"
-              className="font-mono bg-background/50 h-[450px] text-xs"
+              placeholder="// 알고리즘 코드를 여기에 입력하세요..."
+              className="font-mono bg-background/50 h-[300px] text-xs"
             />
           </CardContent>
           <CardFooter>

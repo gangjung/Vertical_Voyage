@@ -26,7 +26,7 @@ export function ChallengeTwo() {
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
   
-  const defaultAlgoCode = exampleCompetitionAlgorithms.find(a => !a.isBot)?.code?.replace(/^function manageElevator\(input\) \{|\}$/g, '') || '';
+  const defaultAlgoCode = exampleCompetitionAlgorithms.find(a => !a.isBot)?.code || '';
   const [codeA, setCodeA] = useState(defaultAlgoCode);
   const [codeB, setCodeB] = useState(defaultAlgoCode);
   
@@ -105,19 +105,13 @@ export function ChallengeTwo() {
     }
 
     try {
-      const fullCode = `
-        function manageElevator(input) {
-          ${code}
-        }
-        return manageElevator;
-      `;
-      const manageElevatorFunc = new Function(fullCode)();
+      const manageElevatorFunc = new Function('input', code);
 
 
       const testElevator = { id: 1, floor: 0, direction: 'idle', passengers: [], distanceTraveled: 0 };
       manageElevatorFunc({ myElevator: testElevator, waitingCalls: Array(NUM_FLOORS).fill(false), numFloors: NUM_FLOORS, elevatorCapacity: ELEVATOR_CAPACITY, currentTime: 0 });
       
-      setter(() => manageElevatorFunc);
+      setter(() => manageElevatorFunc as any);
       reset();
 
       if (!isInitialLoad) {
@@ -243,13 +237,13 @@ export function ChallengeTwo() {
                   </div>
               </div>
               <Label htmlFor="algo-a-select" className="mb-2 block text-sm font-medium"><Code className="inline-block w-4 h-4 mr-1"/>알고리즘 예시 선택</Label>
-              <Select onValueChange={v => setCodeA(exampleCompetitionAlgorithms.find(a => a.name === v)?.code?.replace(/^function manageElevator\(input\) \{|\}$/g, '') || '')} defaultValue={exampleCompetitionAlgorithms[0].name}>
+              <Select onValueChange={v => setCodeA(exampleCompetitionAlgorithms.find(a => a.name === v)?.code || '')} defaultValue={exampleCompetitionAlgorithms[0].name}>
                   <SelectTrigger id="algo-a-select"><SelectValue/></SelectTrigger>
                   <SelectContent>
-                      {exampleCompetitionAlgorithms.map(a => <SelectItem key={a.name} value={a.name} disabled={a.isBot}>{a.name}</SelectItem>)}
+                      {exampleCompetitionAlgorithms.filter(a => !a.isBot).map(a => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
                   </SelectContent>
               </Select>
-              <Textarea value={codeA} onChange={e => setCodeA(e.target.value)} className="font-mono h-[450px] text-xs mt-2" placeholder="function manageElevator(input) { ... }"/>
+              <Textarea value={codeA} onChange={e => setCodeA(e.target.value)} className="font-mono h-[300px] text-xs mt-2" placeholder="// 알고리즘 코드를 여기에 입력하세요..." />
           </CardContent>
           <CardFooter>
               <Button onClick={() => handleApplyCodeA()} className="w-full bg-blue-600 hover:bg-blue-700"><Code className="mr-2 h-4 w-4"/>Apply Algorithm A</Button>
@@ -280,7 +274,7 @@ export function ChallengeTwo() {
                 onValueChange={(value) => {
                   const selectedAlgo = exampleCompetitionAlgorithms.find(a => a.name === value);
                   if (selectedAlgo) {
-                    const codeToSet = selectedAlgo.code?.replace(/^function manageElevator\(input\) \{|\}$/g, '') || '';
+                    const codeToSet = selectedAlgo.code || '';
                     setCodeB(codeToSet);
                     if (selectedAlgo.isBot) {
                       setIsBotB(true);
@@ -303,8 +297,8 @@ export function ChallengeTwo() {
                     setCodeB(e.target.value);
                     setIsBotB(false);
                 }}
-                className="font-mono h-[450px] text-xs mt-2" 
-                placeholder="function manageElevator(input) { ... }"
+                className="font-mono h-[300px] text-xs mt-2" 
+                placeholder="// 알고리즘 코드를 여기에 입력하세요..."
                 readOnly={isBotB}
               />
           </CardContent>
