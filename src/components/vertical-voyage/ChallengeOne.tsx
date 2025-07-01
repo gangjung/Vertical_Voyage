@@ -131,6 +131,25 @@ export function ChallengeOne() {
           />
         </CardContent>
       </Card>
+      
+      <div className="w-full flex justify-center my-2">
+        {stats.totalOperatingTime > 0 ? (
+          <Button onClick={start} size="lg">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Restart Simulation
+          </Button>
+        ) : isRunning ? (
+          <Button onClick={pause} variant="secondary" size="lg">
+            <Pause className="mr-2 h-4 w-4" />
+            Pause Simulation
+          </Button>
+        ) : (
+          <Button onClick={start} size="lg">
+            <Play className="mr-2 h-4 w-4" />
+            Start Simulation
+          </Button>
+        )}
+      </div>
 
       {stats.totalOperatingTime > 0 && (
         <Card className="w-full shadow-lg border-2 border-accent animate-fadeIn">
@@ -324,7 +343,7 @@ export function ChallengeOne() {
                           <ul className="list-['-_'] list-inside pl-4 mt-1">
                               <li><code className="p-0.5 rounded bg-muted">floor</code>: 현재 층 (0부터 시작)</li>
                               <li><code className="p-0.5 rounded bg-muted">direction</code>: 현재 방향 ('up', 'down', 'idle')</li>
-                              <li><code className="p-0.5 rounded bg-muted">passengers</code>: 탑승 중인 승객 배열 (각 승객 객체는 목적지 층을 의미하는 <code className="p-0.5 rounded bg-muted">destinationFloor</code> 속성을 가집니다)</li>
+                              <li><code className="p-0.5 rounded bg-muted">passengers</code>: 탑승 중인 승객 배열. 각 승객 객체는 승객의 목적지 층을 나타내는 <code className="p-0.5 rounded bg-muted">destinationFloor</code> 숫자 속성을 가집니다.</li>
                               <li><code className="p-0.5 rounded bg-muted">distanceTraveled</code>: 총 이동 거리</li>
                           </ul>
                       </li>
@@ -345,28 +364,11 @@ export function ChallengeOne() {
               className="font-mono bg-background/50 h-56 text-xs"
             />
           </CardContent>
-          <CardFooter className="flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-            <Button onClick={() => handleApplyCode(false)} className="w-full sm:w-auto">
+          <CardFooter>
+            <Button onClick={() => handleApplyCode(false)} className="w-full">
               <Code className="mr-2 h-4 w-4" />
               Apply Algorithm
             </Button>
-            <div className="flex-grow" />
-            {stats.totalOperatingTime > 0 ? (
-              <Button onClick={start} className="w-full sm:w-auto">
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Restart Simulation
-              </Button>
-            ) : isRunning ? (
-              <Button onClick={pause} variant="secondary" className="w-full sm:w-auto">
-                <Pause className="mr-2 h-4 w-4" />
-                Pause Simulation
-              </Button>
-            ) : (
-              <Button onClick={start} className="w-full sm:w-auto">
-                <Play className="mr-2 h-4 w-4" />
-                Start Simulation
-              </Button>
-            )}
           </CardFooter>
        </Card>
       
