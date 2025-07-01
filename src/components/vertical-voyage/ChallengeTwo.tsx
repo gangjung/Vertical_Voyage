@@ -331,6 +331,13 @@ if (input.waitingCalls[input.myElevator.floor]) {
                         </pre>
                       </li>
                   </ul>
+                  <div className="mt-2">
+                    <h5 className="font-semibold text-foreground">💡 팁: 시간 효율 마스터하기</h5>
+                     <ul className="list-['-_'] list-inside pl-4 mt-1 space-y-1 text-xs">
+                        <li><strong className="text-foreground">1-스텝 픽업 (방향 유지):</strong> 엘리베이터의 이동 방향(<code className="p-0.5 rounded bg-muted">'up'</code>, <code className="p-0.5 rounded bg-muted">'down'</code>)과 같은 방향으로 가려는 승객을 만나면, 멈춤 없이 즉시 태우고 다음 스텝에 바로 이동합니다. 가장 빠른 방법이지만, 승객의 목적지를 모르므로 위험이 따릅니다.</li>
+                        <li><strong className="text-foreground">2-스텝 픽업 ('idle' 정차):</strong> <code className="p-0.5 rounded bg-muted">'idle'</code> 명령은 '완전한 정지'를 의미합니다. 한 스텝을 소모해 멈춰서 승객을 태우고, 그 다음 스텝에 새 목적지를 향해 이동을 시작합니다. 방향에 상관없이 태울 수 있는 가장 안전한 방법입니다.</li>
+                    </ul>
+                  </div>
               </div>
             </div>
           </div>
