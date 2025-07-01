@@ -17,7 +17,6 @@ import { exampleAlgorithms } from '@/ai/example-algorithms';
 import { Label } from '@/components/ui/label';
 import { generateRandomManifest, passengerScenarios } from '@/ai/passenger-scenarios';
 import type { PassengerManifest } from '@/ai/passenger-scenarios';
-import { manageElevators as defaultManageElevators } from '@/ai/elevator-algorithm';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const NUM_FLOORS = 10;
@@ -33,8 +32,8 @@ const ElevatorStatus = ({ elevator }: { elevator: ElevatorState }) => (
 export function ChallengeOne() {
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
-  const [code, setCode] = useState(defaultManageElevators.toString().replace(/^function manageElevators\(input\) \{|\}$/g, ''));
-  const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(() => defaultManageElevators);
+  const [code, setCode] = useState(exampleAlgorithms[0].code.replace(/^function manageElevators\(input\) \{|\}$/g, ''));
+  const [customAlgorithm, setCustomAlgorithm] = useState<((input: AlgorithmInput) => ElevatorCommand[]) | null>(null);
   
   const [selectedScenarioName, setSelectedScenarioName] = useState(passengerScenarios[0].name);
   const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
@@ -328,6 +327,7 @@ export function ChallengeOne() {
               <div>
                 <Label htmlFor="algorithm-select" className="mb-2 block text-sm font-medium"><Code className="inline-block w-4 h-4 mr-1"/>알고리즘 예시 선택</Label>
                 <Select
+                  defaultValue={exampleAlgorithms[0].name}
                   onValueChange={(value) => {
                     const selectedAlgo = exampleAlgorithms.find(algo => algo.name === value);
                     if (selectedAlgo) {
@@ -336,7 +336,7 @@ export function ChallengeOne() {
                   }}
                 >
                   <SelectTrigger id="algorithm-select" className="w-full">
-                    <SelectValue placeholder="예시를 선택하세요" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {exampleAlgorithms.map((algo) => (

@@ -17,7 +17,6 @@ import { Label } from '@/components/ui/label';
 import { generateRandomManifest, passengerScenarios } from '@/ai/passenger-scenarios';
 import type { PassengerManifest } from '@/ai/passenger-scenarios';
 import { cn } from '@/lib/utils';
-import { manageElevator as defaultManageElevator } from '@/ai/competition-algorithm';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const NUM_FLOORS = 10;
@@ -27,8 +26,9 @@ export function ChallengeTwo() {
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
   
-  const [codeA, setCodeA] = useState(defaultManageElevator.toString().replace(/^function manageElevator\(input\) \{|\}$/g, ''));
-  const [codeB, setCodeB] = useState(defaultManageElevator.toString().replace(/^function manageElevator\(input\) \{|\}$/g, ''));
+  const defaultAlgoCode = exampleCompetitionAlgorithms.find(a => !a.isBot)?.code?.replace(/^function manageElevator\(input\) \{|\}$/g, '') || '';
+  const [codeA, setCodeA] = useState(defaultAlgoCode);
+  const [codeB, setCodeB] = useState(defaultAlgoCode);
   
   const [algorithmA, setAlgorithmA] = useState<((input: CompetitionAlgorithmInput) => ElevatorCommand) | null>(null);
   const [algorithmB, setAlgorithmB] = useState<((input: CompetitionAlgorithmInput) => ElevatorCommand) | null>(null);
