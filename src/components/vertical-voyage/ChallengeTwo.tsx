@@ -26,10 +26,12 @@ export function ChallengeTwo() {
   const { toast } = useToast();
   
   const [codeA, setCodeA] = useState(exampleCompetitionAlgorithms[0].code);
-  const [codeB, setCodeB] = useState(exampleCompetitionAlgorithms[1].code);
+  const [codeB, setCodeB] = useState(exampleCompetitionAlgorithms.find(a => !a.isBot)?.code || '');
   
   const [algorithmA, setAlgorithmA] = useState<((input: CompetitionAlgorithmInput) => ElevatorCommand) | null>(null);
   const [algorithmB, setAlgorithmB] = useState<((input: CompetitionAlgorithmInput) => ElevatorCommand) | null>(null);
+  
+  const [isBotB, setIsBotB] = useState(false);
 
   const [passengerManifest, setPassengerManifest] = useState<PassengerManifest>(passengerScenarios[0].manifest);
   
@@ -51,7 +53,10 @@ export function ChallengeTwo() {
   useEffect(() => {
     setIsClient(true);
     handleApplyCodeA(true);
-    handleApplyCodeB(true);
+    const defaultB = exampleCompetitionAlgorithms.find(a => !a.isBot);
+    if (defaultB) {
+      handleApplyCode(defaultB.code, setAlgorithmB, '알고리즘 B', true);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -61,7 +66,7 @@ export function ChallengeTwo() {
     algoName: string,
     isInitialLoad = false
     ) => {
-    if (!code.trim()) {
+    if (!code || !code.trim()) {
       toast({ variant: "destructive", title: "코드가 비어있습니다", description: `${algoName} 알고리즘 코드를 입력해주세요.` });
       return;
     }
@@ -207,7 +212,7 @@ export function ChallengeTwo() {
               <Select onValueChange={v => setCodeA(exampleCompetitionAlgorithms.find(a => a.name === v)?.code || '')} defaultValue={exampleCompetitionAlgorithms[0].name}>
                   <SelectTrigger id="algo-a-select"><SelectValue/></SelectTrigger>
                   <SelectContent>
-                      {exampleCompetitionAlgorithms.map(a => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
+                      {exampleCompetitionAlgorithms.map(a => <SelectItem key={a.name} value={a.name} disabled={a.isBot}>{a.name}</SelectItem>)}
                   </SelectContent>
               </Select>
               <Textarea value={codeA} onChange={e => setCodeA(e.target.value)} className="font-mono h-40 text-xs mt-2" placeholder="function manageElevator(input) { ... }"/>
@@ -236,17 +241,43 @@ export function ChallengeTwo() {
                       <span className="font-bold">{distB}</span>
                   </div>
               </div>
-              <Label htmlFor="algo-b-select" className="mb-2 block text-sm font-medium"><Code className="inline-block w-4 h-4 mr-1"/>알고리즘 예시 선택</Label>
-              <Select onValueChange={v => setCodeB(exampleCompetitionAlgorithms.find(a => a.name === v)?.code || '')} defaultValue={exampleCompetitionAlgorithms[1].name}>
+              <Label htmlFor="algo-b-select" className="mb-2 block text-sm font-medium"><Code className="inline-block w-4 h-4 mr-1"/>알고리즘 예시 또는 봇 선택</Label>
+              <Select
+                onValueChange={(value) => {
+                  const selectedAlgo = exampleCompetitionAlgorithms.find(a => a.name === value);
+                  if (selectedAlgo) {
+                    setCodeB(selectedAlgo.code || '');
+                    if (selectedAlgo.isBot) {
+                      setIsBotB(true);
+                      handleApplyCode(selectedAlgo.code, setAlgorithmB, selectedAlgo.name);
+                    } else {
+                      setIsBotB(false);
+                    }
+                  }
+                }}
+                defaultValue={exampleCompetitionAlgorithms.find(a => !a.isBot)?.name}
+              >
                   <SelectTrigger id="algo-b-select"><SelectValue/></SelectTrigger>
                   <SelectContent>
                       {exampleCompetitionAlgorithms.map(a => <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>)}
                   </SelectContent>
               </Select>
-              <Textarea value={codeB} onChange={e => setCodeB(e.target.value)} className="font-mono h-40 text-xs mt-2" placeholder="function manageElevator(input) { ... }"/>
+              <Textarea 
+                value={isBotB ? `// 봇 알고리즘이 선택되었습니다.\n// 코드는 볼 수 없습니다.` : codeB} 
+                onChange={e => {
+                    setCodeB(e.target.value);
+                    setIsBotB(false);
+                }}
+                className="font-mono h-40 text-xs mt-2" 
+                placeholder="function manageElevator(input) { ... }"
+                readOnly={isBotB}
+              />
           </CardContent>
           <CardFooter>
-              <Button onClick={() => handleApplyCodeB()} className="w-full bg-red-600 hover:bg-red-700"><Code className="mr-2 h-4 w-4"/>Apply Algorithm B</Button>
+              <Button onClick={() => handleApplyCodeB()} className="w-full bg-red-600 hover:bg-red-700" disabled={isBotB}>
+                <Code className="mr-2 h-4 w-4"/>
+                Apply Algorithm B
+              </Button>
           </CardFooter>
         </Card>
       </div>

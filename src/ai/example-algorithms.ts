@@ -207,6 +207,7 @@ function manageElevators(input) {
 export const exampleCompetitionAlgorithms = [
     {
         name: '기본: 최근접 호출 우선',
+        isBot: false,
         code: `// 챌린지 2 기본 알고리즘: 탑승객을 먼저 내리고, 가장 가까운 호출에 응답합니다.
 /*
  * @param {object} input - 시뮬레이션 상태 데이터
@@ -251,6 +252,7 @@ function manageElevator(input) {
     },
     {
         name: '공격적: 항상 위로',
+        isBot: false,
         code: `// 챌린지 2 예시: 항상 위쪽 호출을 먼저 확인하는 공격적인 알고리즘
 /*
  * @param {object} input - 시뮬레이션 상태 데이터
@@ -289,5 +291,20 @@ function manageElevator(input) {
     // 4. 할 일 없으면 대기
     return 'idle';
 }`
+    },
+    {
+        name: '봇 (초급)',
+        isBot: true,
+        code: `function manageElevator(input){const{myElevator:t,waitingCalls:e}=input;if(t.passengers.length>0){const i=t.passengers[0].destinationFloor;return i>t.floor?"up":i<t.floor?"down":"idle"}const i=e.findIndex(t=>!0===t);return-1!==i?i>t.floor?"up":i<t.floor?"down":"idle":"idle"}`
+    },
+    {
+        name: '봇 (중급)',
+        isBot: true,
+        code: `function manageElevator(input){const{myElevator:t,waitingCalls:e}=input;if(t.passengers.length>0){const i=t.passengers.reduce((e,i)=>Math.abs(i.destinationFloor-t.floor)<Math.abs(e.destinationFloor-t.floor)?i:e).destinationFloor;return i>t.floor?"up":i<t.floor?"down":"idle"}let i=-1,r=1/0;return e.forEach((s,o)=>{if(s){const n=Math.abs(t.floor-o);n<r&&(r=n,i=o)}}),-1!==i?i>t.floor?"up":i<t.floor?"down":"idle":"idle"}`
+    },
+    {
+        name: '봇 (고급)',
+        isBot: true,
+        code: `function manageElevator(input){const{myElevator:t,waitingCalls:e,numFloors:i}=input,r=()=>t.passengers.some(e=>e.destinationFloor>t.floor)||e.some((e,i)=>e&&i>t.floor),s=()=>t.passengers.some(e=>e.destinationFloor<t.floor)||e.some((e,i)=>e&&i<t.floor);if(t.passengers.some(e=>e.destinationFloor===t.floor))return"idle";if(e[t.floor])return"idle";if("up"===t.direction)return r()?"up":s()?"down":"idle";if("down"===t.direction)return s()?"down":r()?"up":"idle";if("idle"===t.direction){if(r())return"up";if(s())return"down"}return"idle"}`
     }
 ];
