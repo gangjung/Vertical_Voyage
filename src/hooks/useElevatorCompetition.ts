@@ -39,7 +39,7 @@ export interface CompetitionStats {
 }
 
 // --- CONSTANTS ---
-const TICK_INTERVAL_MS = 1000;
+const TICK_INTERVAL_MS = 500;
 
 // --- MAIN HOOK ---
 export function useElevatorCompetition(
